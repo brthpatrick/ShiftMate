@@ -13,4 +13,8 @@ public class Company
     public DateTime CreatedAt { get; set; } 
     
     public ICollection<Location> Locations { get; set; } = new List<Location>();
+
+    public ICollection<Department> Departments { get; set; } = new List<Department>();
+
+    public ICollection<Employee> Employees { get; set; } = new List<Employee>();
 }
