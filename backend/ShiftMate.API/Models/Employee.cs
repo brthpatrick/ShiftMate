@@ -23,4 +23,12 @@ public class Employee
     public Company Company { get; set; } = null!;
 
     public Department Department { get; set; } = null!;
+
+    public ICollection<EmployeeRole> EmployeeRoles { get; set; } = new List<EmployeeRole>();
+
+    public ICollection<ShiftAssignment> ShiftAssignments { get; set; } = new List<ShiftAssignment>();
+
+    public ICollection<Availability> Availabilities { get; set; } = new List<Availability>();
+
+    public ICollection<LeaveRequest> LeaveRequests { get; set; } = new List<LeaveRequest>();
 }
