@@ -30,6 +30,8 @@ public class ShiftMateDbContext : DbContext
 
     public DbSet<LeaveRequest> LeaveRequests { get; set; }
 
+    public DbSet<ShiftRoleRequirement> ShiftRoleRequirements { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -131,6 +133,25 @@ public class ShiftMateDbContext : DbContext
             entity.Property(sa => sa.Status)
                 .HasMaxLength(30)
                 .IsRequired();
+        });
+
+        modelBuilder.Entity<ShiftRoleRequirement>(entity =>
+        {
+            entity.Property(srr => srr.RequiredEmployees)
+                .IsRequired();
+
+            entity.HasOne(srr => srr.Shift)
+                .WithMany(s => s.RoleRequirements)
+                .HasForeignKey(srr => srr.ShiftId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(srr => srr.Role)
+                .WithMany(r => r.ShiftRoleRequirements)
+                .HasForeignKey(srr => srr.RoleId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(srr => new { srr.ShiftId, srr.RoleId })
+                .IsUnique();
         });
 
         modelBuilder.Entity<LeaveRequest>(entity =>

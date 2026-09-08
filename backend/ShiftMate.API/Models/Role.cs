@@ -9,4 +9,6 @@ public class Role
     public string? Description { get; set; }
 
     public ICollection<EmployeeRole> EmployeeRoles { get; set; } = new List<EmployeeRole>();
+
+    public ICollection<ShiftRoleRequirement> ShiftRoleRequirements { get; set; } = new List<ShiftRoleRequirement>();
 }

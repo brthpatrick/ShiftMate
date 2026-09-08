@@ -13,7 +13,7 @@ public class ShiftEligibilityService : IShiftEligibilityService
     }
 
     public async Task<ShiftEligibilityResult> CheckEligibilityAsync(
-        int employeeId, 
+        int employeeId,
         int shiftId)
     {
         var employee = await _context.Employees
@@ -26,7 +26,7 @@ public class ShiftEligibilityService : IShiftEligibilityService
                 IsEligible = false,
                 Reason = "The employee does not exist."
             };
-        }   
+        }
 
         if (!employee.IsActive)
         {
@@ -40,7 +40,7 @@ public class ShiftEligibilityService : IShiftEligibilityService
         var shift = await _context.Shifts
             .Include(s => s.Location)
             .FirstOrDefaultAsync(s => s.Id == shiftId);
-        
+
         if (shift is null)
         {
             return new ShiftEligibilityResult
@@ -60,8 +60,8 @@ public class ShiftEligibilityService : IShiftEligibilityService
         }
 
         var alreadyAssigned = await _context.ShiftAssignments
-            .AnyAsync(sa => 
-            sa.EmployeeId == employeeId && 
+            .AnyAsync(sa =>
+            sa.EmployeeId == employeeId &&
             sa.ShiftId == shiftId &&
             sa.Status != "Cancelled");
 
@@ -74,9 +74,59 @@ public class ShiftEligibilityService : IShiftEligibilityService
             };
         }
 
+        var requiredRoles = await _context.ShiftRoleRequirements
+            .Where(srr => srr.ShiftId == shiftId)
+            .ToListAsync();
+
+        foreach (var requirement in requiredRoles)
+        {
+            var employeeHasRole = await _context.EmployeeRoles
+                .AnyAsync(er =>
+                    er.EmployeeId == employeeId &&
+                    er.RoleId == requirement.RoleId);
+
+            if (!employeeHasRole)
+            {
+                var roleName = await _context.Roles
+                    .Where(r => r.Id == requirement.RoleId)
+                    .Select(r => r.Name)
+                    .FirstAsync();
+
+                return new ShiftEligibilityResult
+                {
+                    IsEligible = false,
+                    Reason = $"The employee does not have the required role: {roleName}."
+                };
+            }
+
+            var assignedEmployeesWithRole = await _context.ShiftAssignments
+                .Where(sa =>
+                    sa.ShiftId == shiftId &&
+                    sa.Status != "Cancelled")
+                .Where(sa =>
+                    _context.EmployeeRoles.Any(er =>
+                        er.EmployeeId == sa.EmployeeId &&
+                        er.RoleId == requirement.RoleId))
+                .CountAsync();
+
+            if (assignedEmployeesWithRole >= requirement.RequiredEmployees)
+            {
+                var roleName = await _context.Roles
+                    .Where(r => r.Id == requirement.RoleId)
+                    .Select(r => r.Name)
+                    .FirstAsync();
+
+                return new ShiftEligibilityResult
+                {
+                    IsEligible = false,
+                    Reason = $"The required number of employees with role '{roleName}' has already been reached."
+                };
+            }
+        }
+
         var hasShiftConflict = await _context.ShiftAssignments
-            .AnyAsync(sa => 
-            sa.EmployeeId == employeeId && 
+            .AnyAsync(sa =>
+            sa.EmployeeId == employeeId &&
             sa.Status != "Cancelled" &&
             sa.Shift.StartTime < shift.EndTime &&
             shift.StartTime < sa.Shift.EndTime);
@@ -95,7 +145,7 @@ public class ShiftEligibilityService : IShiftEligibilityService
         var shiftEndTime = shift.EndTime.TimeOfDay;
 
         var hasAvailability = await _context.Availabilities
-            .AnyAsync(a => 
+            .AnyAsync(a =>
             a.EmployeeId == employeeId &&
             a.DayOfWeek == dayOfWeek &&
             a.IsAvailable &&
@@ -112,7 +162,7 @@ public class ShiftEligibilityService : IShiftEligibilityService
         }
 
         var hasApprovedLeave = await _context.LeaveRequests
-            .AnyAsync(lr => 
+            .AnyAsync(lr =>
             lr.EmployeeId == employeeId &&
             lr.Status == "Approved" &&
             lr.StartDate.Date <= shift.StartTime.Date &&
