@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using ShiftMate.API.Data;
 using ShiftMate.API.DTOs.ShiftAssignments;
 using ShiftMate.API.Models;
+using ShiftMate.API.Services.Scheduling;
 
 namespace ShiftMate.API.Controllers;
 
@@ -12,9 +13,14 @@ public class ShiftAssignmentsController : ControllerBase
 {
     private readonly ShiftMateDbContext _context;
 
-    public ShiftAssignmentsController(ShiftMateDbContext context)
+    private readonly IShiftEligibilityService _eligibilityService;
+
+    public ShiftAssignmentsController(
+        ShiftMateDbContext context,
+        IShiftEligibilityService eligibilityService)
     {
         _context = context;
+        _eligibilityService = eligibilityService;
     }
 
     [HttpGet]
@@ -67,60 +73,15 @@ public class ShiftAssignmentsController : ControllerBase
 
     [HttpPost]
     public async Task<ActionResult<ShiftAssignmentResponse>> AssignEmployee(
-        AssignEmployeeToShiftRequest request)
+       AssignEmployeeToShiftRequest request)
     {
-        var shift = await _context.Shifts
-            .Include(s => s.Location)
-            .FirstOrDefaultAsync(s => s.Id == request.ShiftId);
+        var eligibility = await _eligibilityService.CheckEligibilityAsync(
+            request.EmployeeId,
+            request.ShiftId);
 
-        if (shift is null)
+        if (!eligibility.IsEligible)
         {
-            return BadRequest("The specified shift does not exist.");
-        }
-
-        var employee = await _context.Employees
-            .FirstOrDefaultAsync(e => e.Id == request.EmployeeId);
-
-        if (employee is null)
-        {
-            return BadRequest("The specified employee does not exist.");
-        }
-
-        if (!employee.IsActive)
-        {
-            return BadRequest("The employee is not active.");
-        }
-
-        var employeeCompanyMatchesLocation = await _context.Locations
-            .AnyAsync(l =>
-                l.Id == shift.LocationId &&
-                l.CompanyId == employee.CompanyId);
-
-        if (!employeeCompanyMatchesLocation)
-        {
-            return BadRequest("The employee does not belong to the company of the shift location.");
-        }
-
-        var alreadyAssigned = await _context.ShiftAssignments
-            .AnyAsync(sa =>
-                sa.ShiftId == request.ShiftId &&
-                sa.EmployeeId == request.EmployeeId);
-
-        if (alreadyAssigned)
-        {
-            return Conflict("The employee is already assigned to this shift.");
-        }
-
-        var hasConflict = await _context.ShiftAssignments
-            .AnyAsync(sa =>
-                sa.EmployeeId == request.EmployeeId &&
-                sa.Status != "Cancelled" &&
-                sa.Shift.StartTime < shift.EndTime &&
-                sa.Shift.EndTime > shift.StartTime);
-
-        if (hasConflict)
-        {
-            return Conflict("The employee already has another shift during this time.");
+            return Conflict(eligibility.Reason);
         }
 
         var assignment = new ShiftAssignment

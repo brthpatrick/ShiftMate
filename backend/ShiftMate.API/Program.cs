@@ -1,13 +1,17 @@
 using Microsoft.EntityFrameworkCore;
 using ShiftMate.API.Data;
+using ShiftMate.API.Services.Scheduling;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
+builder.Services.AddScoped<IShiftEligibilityService, ShiftEligibilityService>();
+
 builder.Services.AddDbContext<ShiftMateDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
+
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
