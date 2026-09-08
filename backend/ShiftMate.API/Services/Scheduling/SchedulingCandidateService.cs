@@ -8,12 +8,16 @@ public class SchedulingCandidateService : ISchedulingCandidateService
     private readonly ShiftMateDbContext _context;
     private readonly IShiftEligibilityService _eligibilityService;
 
+    private readonly ICandidateScoringService _scoringService;
+
     public SchedulingCandidateService(
         ShiftMateDbContext context,
-        IShiftEligibilityService eligibilityService)
+        IShiftEligibilityService eligibilityService,
+        ICandidateScoringService scoringService)
     {
         _context = context;
         _eligibilityService = eligibilityService;
+        _scoringService = scoringService;
     }
 
     public async Task<List<SchedulingCandidateResult>> GetCandidatesAsync(
@@ -55,7 +59,9 @@ public class SchedulingCandidateService : ISchedulingCandidateService
             {
                 EmployeeId = employee.Id,
                 EmployeeName = $"{employee.FirstName} {employee.LastName}",
-                Score = CalculateScore(employee.Id, roles),
+                Score = await _scoringService.CalculateScoreAsync(
+                    employee.Id,
+                    shiftId),
                 Roles = roles,
                 Notes = "Employee is eligible for this shift."
             });
@@ -65,19 +71,5 @@ public class SchedulingCandidateService : ISchedulingCandidateService
             .OrderByDescending(c => c.Score)
             .ThenBy(c => c.EmployeeName)
             .ToList();
-    }
-
-    private static int CalculateScore(
-        int employeeId,
-        List<string> roles)
-    {
-        var score = 50;
-
-        if (roles.Count > 0)
-        {
-            score += 25;
-        }
-
-        return score;
     }
 }
