@@ -8,16 +8,16 @@ public class AutomaticSchedulingService : IAutomaticSchedulingService
 {
     private readonly ShiftMateDbContext _context;
     private readonly ISchedulingCandidateService _candidateService;
-    private readonly ICandidateScoringService _scoringService;
+    private readonly IEmployeeWorkloadService _workloadService;
 
     public AutomaticSchedulingService(
         ShiftMateDbContext context,
         ISchedulingCandidateService candidateService,
-        ICandidateScoringService scoringService)
+        IEmployeeWorkloadService workloadService)
     {
         _context = context;
         _candidateService = candidateService;
-        _scoringService = scoringService;
+        _workloadService = workloadService;
     }
 
     public async Task<AutomaticSchedulingResult> ScheduleShiftAsync(int shiftId)
@@ -78,11 +78,34 @@ public class AutomaticSchedulingService : IAutomaticSchedulingService
             var matchingCandidates = candidates
                 .Where(c =>
                     c.Roles.Contains(requirement.RoleName))
-                .Take(neededEmployees)
                 .ToList();
+
+            // Fairness:
+            // First prefer employees with fewer scheduled hours.
+            // If hours are equal, prefer fewer assigned shifts.
+            // If both are equal, use the candidate score.
+            var rankedCandidates = new List<(SchedulingCandidateResult Candidate, EmployeeWorkloadResult Workload)>();
 
             foreach (var candidate in matchingCandidates)
             {
+                var workload = await _workloadService
+                    .GetWorkloadAsync(candidate.EmployeeId);
+
+                rankedCandidates.Add((candidate, workload));
+            }
+
+            var selectedCandidates = rankedCandidates
+                .OrderBy(x => x.Workload.ScheduledHours)
+                .ThenBy(x => x.Workload.AssignedShiftCount)
+                .ThenByDescending(x => x.Candidate.Score)
+                .ThenBy(x => x.Candidate.EmployeeName)
+                .Take(neededEmployees)
+                .ToList();
+
+            foreach (var selected in selectedCandidates)
+            {
+                var candidate = selected.Candidate;
+
                 var assignment = new ShiftAssignment
                 {
                     ShiftId = shiftId,
@@ -107,7 +130,7 @@ public class AutomaticSchedulingService : IAutomaticSchedulingService
             await _context.SaveChangesAsync();
 
             var missing =
-                neededEmployees - matchingCandidates.Count;
+                neededEmployees - selectedCandidates.Count;
 
             if (missing > 0)
             {

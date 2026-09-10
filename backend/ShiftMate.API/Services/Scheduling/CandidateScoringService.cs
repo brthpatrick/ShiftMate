@@ -6,10 +6,14 @@ namespace ShiftMate.API.Services.Scheduling;
 public class CandidateScoringService : ICandidateScoringService
 {
     private readonly ShiftMateDbContext _context;
+    private readonly IEmployeeWorkloadService _workloadService;
 
-    public CandidateScoringService(ShiftMateDbContext context)
+    public CandidateScoringService(
+        ShiftMateDbContext context,
+        IEmployeeWorkloadService workloadService)
     {
         _context = context;
+        _workloadService = workloadService;
     }
 
     public async Task<int> CalculateScoreAsync(
@@ -72,49 +76,33 @@ public class CandidateScoringService : ICandidateScoringService
             score += 25;
         }
 
-        // 3. Number of assigned shifts
-        var assignedShiftCount = await _context.ShiftAssignments
-            .CountAsync(sa =>
-                sa.EmployeeId == employeeId &&
-                sa.Status != "Cancelled");
+        // 3. Employee workload
+        var workload = await _workloadService
+            .GetWorkloadAsync(employeeId);
 
-        if (assignedShiftCount == 0)
+        if (workload.AssignedShiftCount == 0)
         {
             score += 15;
         }
-        else if (assignedShiftCount <= 2)
+        else if (workload.AssignedShiftCount <= 2)
         {
             score += 10;
         }
-        else if (assignedShiftCount <= 4)
+        else if (workload.AssignedShiftCount <= 4)
         {
             score += 5;
         }
 
         // 4. Total scheduled hours
-        var assignments = await _context.ShiftAssignments
-            .Where(sa =>
-                sa.EmployeeId == employeeId &&
-                sa.Status != "Cancelled")
-            .Select(sa => new
-            {
-                sa.Shift.StartTime,
-                sa.Shift.EndTime
-            })
-            .ToListAsync();
-
-        var totalScheduledHours = assignments.Sum(a =>
-            (a.EndTime - a.StartTime).TotalHours);
-
-        if (totalScheduledHours < 8)
+        if (workload.ScheduledHours < 8)
         {
             score += 20;
         }
-        else if (totalScheduledHours < 16)
+        else if (workload.ScheduledHours < 16)
         {
             score += 15;
         }
-        else if (totalScheduledHours < 24)
+        else if (workload.ScheduledHours < 24)
         {
             score += 10;
         }
