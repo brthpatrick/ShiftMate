@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ShiftMate.API.Data;
 
@@ -11,9 +12,11 @@ using ShiftMate.API.Data;
 namespace ShiftMate.API.Migrations
 {
     [DbContext(typeof(ShiftMateDbContext))]
-    partial class ShiftMateDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260910192416_AddEmployeePreferences")]
+    partial class AddEmployeePreferences
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -159,34 +162,6 @@ namespace ShiftMate.API.Migrations
                     b.ToTable("Employees");
                 });
 
-            modelBuilder.Entity("ShiftMate.API.Models.EmployeeDayPreference", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("DayOfWeek")
-                        .HasColumnType("int");
-
-                    b.Property<int>("EmployeeId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsPreferred")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsUnavailable")
-                        .HasColumnType("bit");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EmployeeId", "DayOfWeek")
-                        .IsUnique();
-
-                    b.ToTable("EmployeeDayPreferences");
-                });
-
             modelBuilder.Entity("ShiftMate.API.Models.EmployeePreference", b =>
                 {
                     b.Property<int>("Id")
@@ -199,6 +174,12 @@ namespace ShiftMate.API.Migrations
                         .HasColumnType("int");
 
                     b.Property<int?>("MaxWeeklyHours")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PreferredDay")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("UnavailableDay")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -445,17 +426,6 @@ namespace ShiftMate.API.Migrations
                     b.Navigation("Department");
                 });
 
-            modelBuilder.Entity("ShiftMate.API.Models.EmployeeDayPreference", b =>
-                {
-                    b.HasOne("ShiftMate.API.Models.Employee", "Employee")
-                        .WithMany("DayPreferences")
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Employee");
-                });
-
             modelBuilder.Entity("ShiftMate.API.Models.EmployeePreference", b =>
                 {
                     b.HasOne("ShiftMate.API.Models.Employee", "Employee")
@@ -574,8 +544,6 @@ namespace ShiftMate.API.Migrations
             modelBuilder.Entity("ShiftMate.API.Models.Employee", b =>
                 {
                     b.Navigation("Availabilities");
-
-                    b.Navigation("DayPreferences");
 
                     b.Navigation("EmployeeRoles");
 

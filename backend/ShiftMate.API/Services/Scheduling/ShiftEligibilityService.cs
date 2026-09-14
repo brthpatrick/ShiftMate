@@ -61,9 +61,9 @@ public class ShiftEligibilityService : IShiftEligibilityService
 
         var alreadyAssigned = await _context.ShiftAssignments
             .AnyAsync(sa =>
-            sa.EmployeeId == employeeId &&
-            sa.ShiftId == shiftId &&
-            sa.Status != "Cancelled");
+                sa.EmployeeId == employeeId &&
+                sa.ShiftId == shiftId &&
+                sa.Status != "Cancelled");
 
         if (alreadyAssigned)
         {
@@ -126,10 +126,10 @@ public class ShiftEligibilityService : IShiftEligibilityService
 
         var hasShiftConflict = await _context.ShiftAssignments
             .AnyAsync(sa =>
-            sa.EmployeeId == employeeId &&
-            sa.Status != "Cancelled" &&
-            sa.Shift.StartTime < shift.EndTime &&
-            shift.StartTime < sa.Shift.EndTime);
+                sa.EmployeeId == employeeId &&
+                sa.Status != "Cancelled" &&
+                sa.Shift.StartTime < shift.EndTime &&
+                shift.StartTime < sa.Shift.EndTime);
 
         if (hasShiftConflict)
         {
@@ -140,17 +140,72 @@ public class ShiftEligibilityService : IShiftEligibilityService
             };
         }
 
+        // Maximum weekly working hours
+        var preference = await _context.EmployeePreferences
+            .FirstOrDefaultAsync(ep => ep.EmployeeId == employeeId);
+
+        if (preference?.MaxWeeklyHours.HasValue == true)
+        {
+            var weekStart = shift.StartTime.Date
+                .AddDays(-(int)shift.StartTime.DayOfWeek);
+
+            var weekEnd = weekStart.AddDays(7);
+
+            var weeklyAssignments = await _context.ShiftAssignments
+                .Where(sa =>
+                    sa.EmployeeId == employeeId &&
+                    sa.Status != "Cancelled" &&
+                    sa.Shift.StartTime >= weekStart &&
+                    sa.Shift.StartTime < weekEnd)
+                .Select(sa => new
+                {
+                    sa.Shift.StartTime,
+                    sa.Shift.EndTime
+                })
+                .ToListAsync();
+
+            var currentWeeklyHours = weeklyAssignments.Sum(a =>
+                (a.EndTime - a.StartTime).TotalHours);
+
+            var newShiftHours =
+                (shift.EndTime - shift.StartTime).TotalHours;
+
+            if (currentWeeklyHours + newShiftHours >
+                preference.MaxWeeklyHours.Value)
+            {
+                return new ShiftEligibilityResult
+                {
+                    IsEligible = false,
+                    Reason = "The employee would exceed their maximum weekly working hours."
+                };
+            }
+        }
+
+        var dayPreference = await _context.EmployeeDayPreferences
+            .FirstOrDefaultAsync(edp =>
+                edp.EmployeeId == employeeId &&
+                edp.DayOfWeek == shift.StartTime.DayOfWeek);
+
+        if (dayPreference?.IsUnavailable == true)
+        {
+            return new ShiftEligibilityResult
+            {
+                IsEligible = false,
+                Reason = "The employee is unavailable on this day."
+            };
+        }
+
         var dayOfWeek = shift.StartTime.DayOfWeek;
         var shiftStartTime = shift.StartTime.TimeOfDay;
         var shiftEndTime = shift.EndTime.TimeOfDay;
 
         var hasAvailability = await _context.Availabilities
             .AnyAsync(a =>
-            a.EmployeeId == employeeId &&
-            a.DayOfWeek == dayOfWeek &&
-            a.IsAvailable &&
-            a.StartTime <= shiftStartTime &&
-            a.EndTime >= shiftEndTime);
+                a.EmployeeId == employeeId &&
+                a.DayOfWeek == dayOfWeek &&
+                a.IsAvailable &&
+                a.StartTime <= shiftStartTime &&
+                a.EndTime >= shiftEndTime);
 
         if (!hasAvailability)
         {
@@ -163,10 +218,10 @@ public class ShiftEligibilityService : IShiftEligibilityService
 
         var hasApprovedLeave = await _context.LeaveRequests
             .AnyAsync(lr =>
-            lr.EmployeeId == employeeId &&
-            lr.Status == "Approved" &&
-            lr.StartDate.Date <= shift.StartTime.Date &&
-            lr.EndDate.Date >= shift.EndTime.Date);
+                lr.EmployeeId == employeeId &&
+                lr.Status == "Approved" &&
+                lr.StartDate.Date <= shift.StartTime.Date &&
+                lr.EndDate.Date >= shift.EndTime.Date);
 
         if (hasApprovedLeave)
         {

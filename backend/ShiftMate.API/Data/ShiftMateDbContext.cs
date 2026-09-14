@@ -32,6 +32,10 @@ public class ShiftMateDbContext : DbContext
 
     public DbSet<ShiftRoleRequirement> ShiftRoleRequirements { get; set; }
 
+    public DbSet<EmployeePreference> EmployeePreferences { get; set; }
+
+    public DbSet<EmployeeDayPreference> EmployeeDayPreferences { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -162,6 +166,29 @@ public class ShiftMateDbContext : DbContext
             entity.Property(lr => lr.Status)
                 .HasMaxLength(30)
                 .IsRequired();
+        });
+
+        modelBuilder.Entity<EmployeePreference>(entity =>
+        {
+            entity.HasOne(ep => ep.Employee)
+                .WithMany(e => e.Preferences)
+                .HasForeignKey(ep => ep.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<EmployeeDayPreference>(entity =>
+        {
+            entity.HasOne(edp => edp.Employee)
+                .WithMany(e => e.DayPreferences)
+                .HasForeignKey(edp => edp.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(edp => new 
+            { 
+                edp.EmployeeId, 
+                edp.DayOfWeek 
+            })
+            .IsUnique();
         });
     }
 }

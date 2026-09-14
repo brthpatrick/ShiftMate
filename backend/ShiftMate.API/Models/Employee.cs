@@ -31,4 +31,8 @@ public class Employee
     public ICollection<Availability> Availabilities { get; set; } = new List<Availability>();
 
     public ICollection<LeaveRequest> LeaveRequests { get; set; } = new List<LeaveRequest>();
+
+    public ICollection<EmployeePreference> Preferences { get; set; } = new List<EmployeePreference>();
+
+    public ICollection<EmployeeDayPreference> DayPreferences { get; set; } = new List<EmployeeDayPreference>();
 }

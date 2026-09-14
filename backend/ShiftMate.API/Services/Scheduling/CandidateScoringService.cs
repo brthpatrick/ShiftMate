@@ -111,6 +111,18 @@ public class CandidateScoringService : ICandidateScoringService
             score += 5;
         }
 
+        // 5. Employee day preference
+        var preferredDay = await _context.EmployeeDayPreferences
+            .AnyAsync(edp =>
+                edp.EmployeeId == employeeId &&
+                edp.DayOfWeek == shift.StartTime.DayOfWeek &&
+                edp.IsPreferred);
+
+        if (preferredDay)
+        {
+            score += 10;
+        }
+
         return Math.Min(score, 100);
     }
 }
