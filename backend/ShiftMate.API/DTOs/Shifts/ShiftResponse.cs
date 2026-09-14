@@ -1,3 +1,5 @@
+using ShiftMate.API.Models;
+
 namespace ShiftMate.API.DTOs.Shifts;
 
 public class ShiftResponse
@@ -15,4 +17,6 @@ public class ShiftResponse
     public int RequiredEmployees { get; set; }
     
     public string? Notes { get; set; }
+
+    public ShiftStatus Status { get; set; }
 }

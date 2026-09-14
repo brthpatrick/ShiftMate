@@ -16,6 +16,8 @@ builder.Services.AddScoped<IAutomaticSchedulingService, AutomaticSchedulingServi
 
 builder.Services.AddScoped<IEmployeeWorkloadService, EmployeeWorkloadService>();
 
+builder.Services.AddScoped<IShiftStatusService, ShiftStatusService>();
+
 builder.Services.AddDbContext<ShiftMateDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));

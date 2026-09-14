@@ -16,6 +16,8 @@ public class Shift
 
     public Location Location { get; set; } = null!;
 
+    public ShiftStatus Status { get; set; } = ShiftStatus.Draft;
+
     public ICollection<ShiftAssignment> ShiftAssignments { get; set; } = new List<ShiftAssignment>();
 
     public ICollection<ShiftRoleRequirement> RoleRequirements { get; set; } = new List<ShiftRoleRequirement>();

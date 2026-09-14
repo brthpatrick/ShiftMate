@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using ShiftMate.API.Data;
 using ShiftMate.API.DTOs.Shifts;
 using ShiftMate.API.Models;
+using ShiftMate.API.Services.Scheduling;
 
 namespace ShiftMate.API.Controllers;
 
@@ -12,9 +13,12 @@ public class ShiftsController : ControllerBase
 {
     private readonly ShiftMateDbContext _context;
 
-    public ShiftsController(ShiftMateDbContext context)
+    private readonly IShiftStatusService _statusService;
+
+    public ShiftsController(ShiftMateDbContext context, IShiftStatusService statusService)
     {
         _context = context;
+        _statusService = statusService;
     }
 
     [HttpGet]
@@ -29,7 +33,8 @@ public class ShiftsController : ControllerBase
                 StartTime = s.StartTime,
                 EndTime = s.EndTime,
                 RequiredEmployees = s.RequiredEmployees,
-                Notes = s.Notes
+                Notes = s.Notes,
+                Status = s.Status
             })
             .ToListAsync();
 
@@ -49,7 +54,8 @@ public class ShiftsController : ControllerBase
                 StartTime = s.StartTime,
                 EndTime = s.EndTime,
                 RequiredEmployees = s.RequiredEmployees,
-                Notes = s.Notes
+                Notes = s.Notes,
+                Status = s.Status
             })
             .FirstOrDefaultAsync();
 
@@ -101,7 +107,8 @@ public class ShiftsController : ControllerBase
                 StartTime = s.StartTime,
                 EndTime = s.EndTime,
                 RequiredEmployees = s.RequiredEmployees,
-                Notes = s.Notes
+                Notes = s.Notes,
+                Status = s.Status
             })
             .FirstAsync();
 
@@ -109,5 +116,48 @@ public class ShiftsController : ControllerBase
             nameof(GetShift),
             new { id = shift.Id },
             response);
+    }
+
+    [HttpPatch("{id:int}/status")]
+    public async Task<IActionResult> UpdateStatus(
+        int id,
+        UpdateShiftStatusRequest request)
+    {
+        var result = await _statusService.ChangeStatusAsync(
+            id,
+            request.Status);
+
+        if (!result.Success)
+        {
+            if (result.Error == "The shift does not exist.")
+            {
+                return NotFound(new
+                {
+                    message = result.Error
+                });
+            }
+
+            return BadRequest(new
+            {
+                message = result.Error
+            });
+        }
+
+        var shift = await _context.Shifts
+            .Where(s => s.Id == id)
+            .Select(s => new ShiftResponse
+            {
+                Id = s.Id,
+                LocationId = s.LocationId,
+                LocationName = s.Location.Name,
+                StartTime = s.StartTime,
+                EndTime = s.EndTime,
+                RequiredEmployees = s.RequiredEmployees,
+                Notes = s.Notes,
+                Status = s.Status
+            })
+            .FirstAsync();
+
+        return Ok(shift);
     }
 }
