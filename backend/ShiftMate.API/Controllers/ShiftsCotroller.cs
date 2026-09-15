@@ -101,6 +101,12 @@ public class ShiftsController : ControllerBase
                 "End time must be later than start time.");
         }
 
+        if (request.RequiredEmployees <= 0)
+        {
+            return BadRequest(
+                "Required employees must be greater than zero.");
+        }
+
         var location = await _context.Locations
             .FirstOrDefaultAsync(l => l.Id == request.LocationId);
 
@@ -122,7 +128,9 @@ public class ShiftsController : ControllerBase
             StartTime = request.StartTime,
             EndTime = request.EndTime,
             RequiredEmployees = request.RequiredEmployees,
-            Notes = request.Notes
+            Notes = string.IsNullOrWhiteSpace(request.Notes)
+                ? null
+                : request.Notes.Trim(),
         };
 
         _context.Shifts.Add(shift);
