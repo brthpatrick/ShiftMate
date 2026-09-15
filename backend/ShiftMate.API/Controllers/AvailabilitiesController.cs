@@ -90,9 +90,10 @@ public class AvailabilitiesController : ControllerBase
         return Ok(availabilities);
     }
 
+    [Authorize(Roles = "Admin,Manager")]
     [HttpPost]
     public async Task<ActionResult<AvailabilityResponse>>
-        CreateAvailability(CreateAvailabilityRequest request)
+       CreateAvailability(CreateAvailabilityRequest request)
     {
         if (request.EndTime <= request.StartTime)
         {
@@ -105,7 +106,7 @@ public class AvailabilitiesController : ControllerBase
 
         if (employee is null)
         {
-            return BadRequest(
+            return NotFound(
                 "The specified employee does not exist.");
         }
 
@@ -137,7 +138,6 @@ public class AvailabilitiesController : ControllerBase
         };
 
         _context.Availabilities.Add(availability);
-
         await _context.SaveChangesAsync();
 
         var response = await _context.Availabilities
@@ -161,6 +161,7 @@ public class AvailabilitiesController : ControllerBase
             response);
     }
 
+    [Authorize(Roles = "Admin,Manager")]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeleteAvailability(int id)
     {
