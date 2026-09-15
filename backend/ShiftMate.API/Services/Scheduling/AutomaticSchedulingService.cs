@@ -27,6 +27,8 @@ public class AutomaticSchedulingService : IAutomaticSchedulingService
             ShiftId = shiftId
         };
 
+        var assignedEmployeeIds = new HashSet<int>();
+
         var shift = await _context.Shifts
             .FirstOrDefaultAsync(s => s.Id == shiftId);
 
@@ -77,14 +79,16 @@ public class AutomaticSchedulingService : IAutomaticSchedulingService
 
             var matchingCandidates = candidates
                 .Where(c =>
-                    c.Roles.Contains(requirement.RoleName))
+                    c.Roles.Contains(requirement.RoleName) &&
+                    !assignedEmployeeIds.Contains(c.EmployeeId))
                 .ToList();
 
             // Fairness:
             // First prefer employees with fewer scheduled hours.
             // If hours are equal, prefer fewer assigned shifts.
             // If both are equal, use the candidate score.
-            var rankedCandidates = new List<(SchedulingCandidateResult Candidate, EmployeeWorkloadResult Workload)>();
+            var rankedCandidates =
+                new List<(SchedulingCandidateResult Candidate, EmployeeWorkloadResult Workload)>();
 
             foreach (var candidate in matchingCandidates)
             {
@@ -105,6 +109,8 @@ public class AutomaticSchedulingService : IAutomaticSchedulingService
             foreach (var selected in selectedCandidates)
             {
                 var candidate = selected.Candidate;
+
+                assignedEmployeeIds.Add(candidate.EmployeeId);
 
                 var assignment = new ShiftAssignment
                 {
