@@ -221,7 +221,7 @@ public class ShiftEligibilityService : IShiftEligibilityService
                 lr.EmployeeId == employeeId &&
                 lr.Status == "Approved" &&
                 lr.StartDate.Date <= shift.StartTime.Date &&
-                lr.EndDate.Date >= shift.EndTime.Date);
+                lr.EndDate.Date >= shift.StartTime.Date);
 
         if (hasApprovedLeave)
         {
