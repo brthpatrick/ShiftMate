@@ -88,58 +88,78 @@ public class EmployeesController : ControllerBase
         return Ok(employee);
     }
 
+    [Authorize(Roles = "Admin,Manager")]
     [HttpPost]
     public async Task<ActionResult<EmployeeResponse>> CreateEmployee(
-        CreateEmployeeRequest request)
+     CreateEmployeeRequest request)
     {
-        if (!_currentUserService.CompanyId.HasValue ||
-            !_accessControlService.IsCompanyAllowed(request.CompanyId))
+        var currentCompanyId = _currentUserService.CompanyId;
+
+        if (!currentCompanyId.HasValue)
         {
-            return Forbid();
+            return Unauthorized();
+        }
+
+        if (string.IsNullOrWhiteSpace(request.FirstName))
+        {
+            return BadRequest("First name is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.LastName))
+        {
+            return BadRequest("Last name is required.");
         }
 
         var companyExists = await _context.Companies
-            .AnyAsync(c => c.Id == request.CompanyId);
+            .AnyAsync(c => c.Id == currentCompanyId.Value);
 
         if (!companyExists)
         {
-            return BadRequest("The specified company does not exist.");
+            return BadRequest("The current company does not exist.");
         }
 
         var departmentExists = await _context.Departments
             .AnyAsync(d =>
                 d.Id == request.DepartmentId &&
-                d.CompanyId == request.CompanyId);
+                d.CompanyId == currentCompanyId.Value);
 
         if (!departmentExists)
         {
             return BadRequest(
-                "The specified department does not exist or does not belong to the specified company.");
+                "The specified department does not exist or does not belong to your company.");
         }
 
+        if (string.IsNullOrWhiteSpace(request.Email))
+        {
+            return BadRequest("Email is required.");
+        }
+
+        var email = request.Email.Trim().ToLower();
+
         var emailExists = await _context.Employees
-            .AnyAsync(e => e.Email == request.Email);
+            .AnyAsync(e => e.Email == email);
 
         if (emailExists)
         {
-            return BadRequest(
+            return Conflict(
                 "An employee with the specified email already exists.");
         }
 
         var employee = new Employee
         {
-            CompanyId = request.CompanyId,
+            CompanyId = currentCompanyId.Value,
             DepartmentId = request.DepartmentId,
             FirstName = request.FirstName,
             LastName = request.LastName,
-            Email = request.Email,
-            Phone = request.Phone,
+            Email = email,
+            Phone = string.IsNullOrWhiteSpace(request.Phone)
+                ? null
+                : request.Phone.Trim(),
             HireDate = request.HireDate,
             IsActive = true
         };
 
         _context.Employees.Add(employee);
-
         await _context.SaveChangesAsync();
 
         var response = new EmployeeResponse
