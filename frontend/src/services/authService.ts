@@ -1,4 +1,5 @@
 import api from './api'
+import { setToken } from './authStorage'
 import type { LoginRequest, LoginResponse } from '../types/auth'
 
 export const login = async (
@@ -8,6 +9,8 @@ export const login = async (
     '/Authentication/login',
     credentials,
   )
+
+  setToken(response.data.token)
 
   return response.data
 }
