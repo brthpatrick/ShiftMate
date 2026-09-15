@@ -70,8 +70,7 @@ public class EmployeeRolesController : ControllerBase
 
         if (!employeeExists)
         {
-            return BadRequest(
-                "The specified employee does not exist.");
+            return NotFound("The specified employee does not exist.");
         }
 
         var roleExists = await _context.Roles
@@ -79,8 +78,7 @@ public class EmployeeRolesController : ControllerBase
 
         if (!roleExists)
         {
-            return BadRequest(
-                "The specified role does not exist.");
+            return NotFound("The specified role does not exist.");
         }
 
         var assignmentExists = await _context.EmployeeRoles
@@ -101,7 +99,6 @@ public class EmployeeRolesController : ControllerBase
         };
 
         _context.EmployeeRoles.Add(employeeRole);
-
         await _context.SaveChangesAsync();
 
         var response = await _context.EmployeeRoles
@@ -118,7 +115,10 @@ public class EmployeeRolesController : ControllerBase
             })
             .FirstOrDefaultAsync();
 
-        return Ok(response);
+        return CreatedAtAction(
+            nameof(GetEmployeeRoles),
+            null,
+            response);
     }
 
     [Authorize(Roles = "Admin,Manager")]
@@ -128,8 +128,7 @@ public class EmployeeRolesController : ControllerBase
         int roleId)
     {
         var employeeAllowed =
-            await _accessControlService.IsEmployeeAllowedAsync(
-                employeeId);
+            await _accessControlService.IsEmployeeAllowedAsync(employeeId);
 
         if (!employeeAllowed)
         {
@@ -137,6 +136,7 @@ public class EmployeeRolesController : ControllerBase
         }
 
         var employeeRole = await _context.EmployeeRoles
+            .Include(er => er.Employee)
             .FirstOrDefaultAsync(er =>
                 er.EmployeeId == employeeId &&
                 er.RoleId == roleId);
@@ -147,7 +147,6 @@ public class EmployeeRolesController : ControllerBase
         }
 
         _context.EmployeeRoles.Remove(employeeRole);
-
         await _context.SaveChangesAsync();
 
         return NoContent();
