@@ -80,45 +80,57 @@ public class LocationController : ControllerBase
         return Ok(location);
     }
 
+    [Authorize(Roles = "Admin,Manager")]
     [HttpPost]
     public async Task<ActionResult<LocationResponse>> CreateLocation(
         CreateLocationRequest request)
     {
-        if (!_currentUserService.CompanyId.HasValue ||
-            !_accessControlService.IsCompanyAllowed(request.CompanyId))
+        var currentCompanyId = _currentUserService.CompanyId;
+
+        if (!currentCompanyId.HasValue)
         {
-            return Forbid();
+            return Unauthorized();
         }
 
+        if (string.IsNullOrWhiteSpace(request.Name))
+        {
+            return BadRequest("Location name is required.");
+        }
+
+        var name = request.Name.Trim();
+
         var companyExists = await _context.Companies
-            .AnyAsync(c => c.Id == request.CompanyId);
+            .AnyAsync(c => c.Id == currentCompanyId.Value);
 
         if (!companyExists)
         {
-            return BadRequest("The specified company does not exist.");
+            return BadRequest("The current company does not exist.");
         }
 
         var locationExists = await _context.Locations
             .AnyAsync(l =>
-                l.CompanyId == request.CompanyId &&
-                l.Name == request.Name);
+                l.CompanyId == currentCompanyId.Value &&
+                l.Name == name);
 
         if (locationExists)
         {
             return Conflict(
-                "A location with this name already exists in the company.");
+                "A location with this name already exists in your company.");
         }
 
         var location = new Location
         {
-            CompanyId = request.CompanyId,
-            Name = request.Name,
-            Address = request.Address,
-            City = request.City
+            CompanyId = currentCompanyId.Value,
+            Name = name,
+            Address = string.IsNullOrWhiteSpace(request.Address)
+                ? null
+                : request.Address.Trim(),
+            City = string.IsNullOrWhiteSpace(request.City)
+                ? null
+                : request.City.Trim()
         };
 
         _context.Locations.Add(location);
-
         await _context.SaveChangesAsync();
 
         var response = new LocationResponse
