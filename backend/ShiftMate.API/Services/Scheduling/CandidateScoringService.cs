@@ -28,11 +28,21 @@ public class CandidateScoringService : ICandidateScoringService
             return 0;
         }
 
+        if (!employee.IsActive)
+        {
+            return 0;
+        }
+
         var shift = await _context.Shifts
             .Include(s => s.Location)
             .FirstOrDefaultAsync(s => s.Id == shiftId);
 
         if (shift is null)
+        {
+            return 0;
+        }
+
+        if (employee.CompanyId != shift.Location.CompanyId)
         {
             return 0;
         }
