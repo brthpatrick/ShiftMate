@@ -1,46 +1,46 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using ShiftMate.API.Data;
 using ShiftMate.API.Services.Authentication;
 using ShiftMate.API.Services.Scheduling;
 
 namespace ShiftMate.API.Controllers;
 
-[Authorize]
+[Authorize(Roles = "Admin,Manager")]
 [ApiController]
 [Route("api/[controller]")]
 public class SchedulingCandidatesController : ControllerBase
 {
+    private readonly ShiftMateDbContext _context;
     private readonly ISchedulingCandidateService _candidateService;
     private readonly IAccessControlService _accessControlService;
-    private readonly ICurrentUserService _currentUserService;
 
     public SchedulingCandidatesController(
+        ShiftMateDbContext context,
         ISchedulingCandidateService candidateService,
-        IAccessControlService accessControlService,
-        ICurrentUserService currentUserService)
+        IAccessControlService accessControlService)
     {
+        _context = context;
         _candidateService = candidateService;
         _accessControlService = accessControlService;
-        _currentUserService = currentUserService;
     }
 
     [HttpGet("shift/{shiftId:int}")]
-    public async Task<ActionResult<List<SchedulingCandidateResult>>>
-        GetCandidates(int shiftId)
+    public async Task<ActionResult<List<SchedulingCandidateResult>>> GetCandidates(
+        int shiftId)
     {
-        var companyId = _currentUserService.CompanyId;
+        var shiftExists = await _context.Shifts
+            .AnyAsync(s => s.Id == shiftId);
 
-        if (!companyId.HasValue)
-        {
-            return Unauthorized();
-        }
-
-        var shiftAllowed =
-            await _accessControlService.IsShiftAllowedAsync(shiftId);
-
-        if (!shiftAllowed)
+        if (!shiftExists)
         {
             return NotFound("The shift does not exist.");
+        }
+
+        if (!await _accessControlService.IsShiftAllowedAsync(shiftId))
+        {
+            return Forbid();
         }
 
         var candidates = await _candidateService
