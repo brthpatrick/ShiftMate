@@ -80,35 +80,4 @@ public class CompaniesController : ControllerBase
 
         return Ok(company);
     }
-
-    [HttpPost]
-    public async Task<ActionResult<CompanyResponse>> CreateCompany(
-        CreateCompanyRequest request)
-    {
-        var company = new Company
-        {
-            Name = request.Name,
-            Email = request.Email,
-            Phone = request.Phone,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        _context.Companies.Add(company);
-
-        await _context.SaveChangesAsync();
-
-        var response = new CompanyResponse
-        {
-            Id = company.Id,
-            Name = company.Name,
-            Email = company.Email,
-            Phone = company.Phone,
-            CreatedAt = company.CreatedAt
-        };
-
-        return CreatedAtAction(
-            nameof(GetCompany),
-            new { id = response.Id },
-            response);
-    }
 }
