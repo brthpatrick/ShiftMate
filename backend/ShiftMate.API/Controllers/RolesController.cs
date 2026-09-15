@@ -60,8 +60,15 @@ public class RolesController : ControllerBase
     public async Task<ActionResult<RoleResponse>> CreateRole(
         CreateRoleRequest request)
     {
+        if (string.IsNullOrWhiteSpace(request.Name))
+        {
+            return BadRequest("Role name is required.");
+        }
+
+        var name = request.Name.Trim();
+
         var roleExists = await _context.Roles
-            .AnyAsync(r => r.Name == request.Name);
+            .AnyAsync(r => r.Name == name);
 
         if (roleExists)
         {
@@ -70,12 +77,13 @@ public class RolesController : ControllerBase
 
         var role = new Role
         {
-            Name = request.Name,
-            Description = request.Description
+            Name = name,
+            Description = string.IsNullOrWhiteSpace(request.Description)
+                ? null
+                : request.Description.Trim()
         };
 
         _context.Roles.Add(role);
-
         await _context.SaveChangesAsync();
 
         var response = new RoleResponse
