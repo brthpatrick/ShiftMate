@@ -94,6 +94,7 @@ public class EmployeePreferencesController : ControllerBase
         });
     }
 
+    [Authorize(Roles = "Admin,Manager")]
     [HttpPost]
     public async Task<ActionResult<EmployeePreferenceResponse>>
         CreatePreference(CreateEmployeePreferenceRequest request)
@@ -103,7 +104,7 @@ public class EmployeePreferencesController : ControllerBase
 
         if (employee is null)
         {
-            return BadRequest(new
+            return NotFound(new
             {
                 message = "The employee does not exist."
             });

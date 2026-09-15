@@ -180,6 +180,9 @@ public class ShiftMateDbContext : DbContext
                 .WithMany(e => e.Preferences)
                 .HasForeignKey(ep => ep.EmployeeId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(ep => ep.EmployeeId)
+                .IsUnique();
         });
 
         modelBuilder.Entity<EmployeeDayPreference>(entity =>
