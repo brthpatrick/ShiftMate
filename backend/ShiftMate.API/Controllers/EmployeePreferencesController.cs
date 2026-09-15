@@ -1,32 +1,51 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ShiftMate.API.Data;
 using ShiftMate.API.DTOs.EmployeePreference;
 using ShiftMate.API.Models;
+using ShiftMate.API.Services.Authentication;
 
 namespace ShiftMate.API.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class EmployeePreferencesController : ControllerBase
 {
     private readonly ShiftMateDbContext _context;
+    private readonly IAccessControlService _accessControlService;
+    private readonly ICurrentUserService _currentUserService;
 
-    public EmployeePreferencesController(ShiftMateDbContext context)
+    public EmployeePreferencesController(
+        ShiftMateDbContext context,
+        IAccessControlService accessControlService,
+        ICurrentUserService currentUserService)
     {
         _context = context;
+        _accessControlService = accessControlService;
+        _currentUserService = currentUserService;
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<EmployeePreferenceResponse>>> GetPreferences()
+    public async Task<ActionResult<IEnumerable<EmployeePreferenceResponse>>>
+        GetPreferences()
     {
+        var companyId = _currentUserService.CompanyId;
+
+        if (!companyId.HasValue)
+        {
+            return Unauthorized();
+        }
+
         var preferences = await _context.EmployeePreferences
-            .Include(ep => ep.Employee)
+            .Where(ep => ep.Employee.CompanyId == companyId.Value)
             .Select(ep => new EmployeePreferenceResponse
             {
                 Id = ep.Id,
                 EmployeeId = ep.EmployeeId,
-                EmployeeName = $"{ep.Employee.FirstName} {ep.Employee.LastName}",
+                EmployeeName = ep.Employee.FirstName + " " +
+                               ep.Employee.LastName,
                 MaxWeeklyHours = ep.MaxWeeklyHours
             })
             .ToListAsync();
@@ -34,9 +53,9 @@ public class EmployeePreferencesController : ControllerBase
         return Ok(preferences);
     }
 
-    [HttpGet("{employeeId}")]
-    public async Task<ActionResult<EmployeePreferenceResponse>> GetEmployeePreferences(
-        int employeeId)
+    [HttpGet("{employeeId:int}")]
+    public async Task<ActionResult<EmployeePreferenceResponse>>
+        GetEmployeePreferences(int employeeId)
     {
         var employee = await _context.Employees
             .FirstOrDefaultAsync(e => e.Id == employeeId);
@@ -47,6 +66,11 @@ public class EmployeePreferencesController : ControllerBase
             {
                 message = "The employee does not exist."
             });
+        }
+
+        if (!_accessControlService.IsCompanyAllowed(employee.CompanyId))
+        {
+            return Forbid();
         }
 
         var preference = await _context.EmployeePreferences
@@ -64,14 +88,15 @@ public class EmployeePreferencesController : ControllerBase
         {
             Id = preference.Id,
             EmployeeId = employee.Id,
-            EmployeeName = $"{employee.FirstName} {employee.LastName}",
+            EmployeeName =
+                $"{employee.FirstName} {employee.LastName}",
             MaxWeeklyHours = preference.MaxWeeklyHours
         });
     }
 
     [HttpPost]
-    public async Task<ActionResult<EmployeePreferenceResponse>> CreatePreference(
-        CreateEmployeePreferenceRequest request)
+    public async Task<ActionResult<EmployeePreferenceResponse>>
+        CreatePreference(CreateEmployeePreferenceRequest request)
     {
         var employee = await _context.Employees
             .FirstOrDefaultAsync(e => e.Id == request.EmployeeId);
@@ -82,6 +107,11 @@ public class EmployeePreferencesController : ControllerBase
             {
                 message = "The employee does not exist."
             });
+        }
+
+        if (!_accessControlService.IsCompanyAllowed(employee.CompanyId))
+        {
+            return Forbid();
         }
 
         if (request.MaxWeeklyHours.HasValue &&
@@ -100,7 +130,8 @@ public class EmployeePreferencesController : ControllerBase
         {
             return Conflict(new
             {
-                message = "The employee already has a preference record."
+                message =
+                    "The employee already has a preference record."
             });
         }
 
@@ -111,6 +142,7 @@ public class EmployeePreferencesController : ControllerBase
         };
 
         _context.EmployeePreferences.Add(preference);
+
         await _context.SaveChangesAsync();
 
         return CreatedAtAction(
@@ -120,7 +152,8 @@ public class EmployeePreferencesController : ControllerBase
             {
                 Id = preference.Id,
                 EmployeeId = employee.Id,
-                EmployeeName = $"{employee.FirstName} {employee.LastName}",
+                EmployeeName =
+                    $"{employee.FirstName} {employee.LastName}",
                 MaxWeeklyHours = preference.MaxWeeklyHours
             });
     }

@@ -1,31 +1,50 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ShiftMate.API.Data;
 using ShiftMate.API.DTOs.Availabilities;
 using ShiftMate.API.Models;
+using ShiftMate.API.Services.Authentication;
 
 namespace ShiftMate.API.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class AvailabilitiesController : ControllerBase
 {
     private readonly ShiftMateDbContext _context;
+    private readonly IAccessControlService _accessControlService;
+    private readonly ICurrentUserService _currentUserService;
 
-    public AvailabilitiesController(ShiftMateDbContext context)
+    public AvailabilitiesController(
+        ShiftMateDbContext context,
+        IAccessControlService accessControlService,
+        ICurrentUserService currentUserService)
     {
         _context = context;
+        _accessControlService = accessControlService;
+        _currentUserService = currentUserService;
     }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<AvailabilityResponse>>> GetAvailabilities()
     {
+        var companyId = _currentUserService.CompanyId;
+
+        if (!companyId.HasValue)
+        {
+            return Unauthorized();
+        }
+
         var availabilities = await _context.Availabilities
+            .Where(a => a.Employee.CompanyId == companyId.Value)
             .Select(a => new AvailabilityResponse
             {
                 Id = a.Id,
                 EmployeeId = a.EmployeeId,
-                EmployeeName = a.Employee.FirstName + " " + a.Employee.LastName,
+                EmployeeName = a.Employee.FirstName + " " +
+                               a.Employee.LastName,
                 DayOfWeek = a.DayOfWeek,
                 StartTime = a.StartTime,
                 EndTime = a.EndTime,
@@ -37,15 +56,20 @@ public class AvailabilitiesController : ControllerBase
     }
 
     [HttpGet("employee/{employeeId:int}")]
-    public async Task<ActionResult<IEnumerable<AvailabilityResponse>>> GetEmployeeAvailabilities(
-        int employeeId)
+    public async Task<ActionResult<IEnumerable<AvailabilityResponse>>>
+        GetEmployeeAvailabilities(int employeeId)
     {
-        var employeeExists = await _context.Employees
-            .AnyAsync(e => e.Id == employeeId);
+        var employee = await _context.Employees
+            .FirstOrDefaultAsync(e => e.Id == employeeId);
 
-        if (!employeeExists)
+        if (employee is null)
         {
             return NotFound("The specified employee does not exist.");
+        }
+
+        if (!_accessControlService.IsCompanyAllowed(employee.CompanyId))
+        {
+            return Forbid();
         }
 
         var availabilities = await _context.Availabilities
@@ -54,7 +78,8 @@ public class AvailabilitiesController : ControllerBase
             {
                 Id = a.Id,
                 EmployeeId = a.EmployeeId,
-                EmployeeName = a.Employee.FirstName + " " + a.Employee.LastName,
+                EmployeeName = a.Employee.FirstName + " " +
+                               a.Employee.LastName,
                 DayOfWeek = a.DayOfWeek,
                 StartTime = a.StartTime,
                 EndTime = a.EndTime,
@@ -66,20 +91,27 @@ public class AvailabilitiesController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<AvailabilityResponse>> CreateAvailability(
-        CreateAvailabilityRequest request)
+    public async Task<ActionResult<AvailabilityResponse>>
+        CreateAvailability(CreateAvailabilityRequest request)
     {
         if (request.EndTime <= request.StartTime)
         {
-            return BadRequest("End time must be later than start time.");
+            return BadRequest(
+                "End time must be later than start time.");
         }
 
-        var employeeExists = await _context.Employees
-            .AnyAsync(e => e.Id == request.EmployeeId);
+        var employee = await _context.Employees
+            .FirstOrDefaultAsync(e => e.Id == request.EmployeeId);
 
-        if (!employeeExists)
+        if (employee is null)
         {
-            return BadRequest("The specified employee does not exist.");
+            return BadRequest(
+                "The specified employee does not exist.");
+        }
+
+        if (!_accessControlService.IsCompanyAllowed(employee.CompanyId))
+        {
+            return Forbid();
         }
 
         var overlappingAvailability = await _context.Availabilities
@@ -91,7 +123,8 @@ public class AvailabilitiesController : ControllerBase
 
         if (overlappingAvailability)
         {
-            return Conflict("The availability period overlaps with an existing availability.");
+            return Conflict(
+                "The availability period overlaps with an existing availability.");
         }
 
         var availability = new Availability
@@ -113,7 +146,8 @@ public class AvailabilitiesController : ControllerBase
             {
                 Id = a.Id,
                 EmployeeId = a.EmployeeId,
-                EmployeeName = a.Employee.FirstName + " " + a.Employee.LastName,
+                EmployeeName = a.Employee.FirstName + " " +
+                               a.Employee.LastName,
                 DayOfWeek = a.DayOfWeek,
                 StartTime = a.StartTime,
                 EndTime = a.EndTime,
@@ -131,11 +165,18 @@ public class AvailabilitiesController : ControllerBase
     public async Task<IActionResult> DeleteAvailability(int id)
     {
         var availability = await _context.Availabilities
+            .Include(a => a.Employee)
             .FirstOrDefaultAsync(a => a.Id == id);
 
         if (availability is null)
         {
             return NotFound();
+        }
+
+        if (!_accessControlService.IsCompanyAllowed(
+                availability.Employee.CompanyId))
+        {
+            return Forbid();
         }
 
         _context.Availabilities.Remove(availability);

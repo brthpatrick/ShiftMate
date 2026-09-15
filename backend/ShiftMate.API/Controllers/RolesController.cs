@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ShiftMate.API.Data;
@@ -6,6 +7,7 @@ using ShiftMate.API.Models;
 
 namespace ShiftMate.API.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class RolesController : ControllerBase
@@ -53,8 +55,10 @@ public class RolesController : ControllerBase
         return Ok(role);
     }
 
+    [Authorize(Roles = "Admin,Manager")]
     [HttpPost]
-    public async Task<ActionResult<RoleResponse>> CreateRole(CreateRoleRequest request)
+    public async Task<ActionResult<RoleResponse>> CreateRole(
+        CreateRoleRequest request)
     {
         var roleExists = await _context.Roles
             .AnyAsync(r => r.Name == request.Name);
@@ -85,5 +89,5 @@ public class RolesController : ControllerBase
             nameof(GetRole),
             new { id = role.Id },
             response);
-    }     
+    }
 }

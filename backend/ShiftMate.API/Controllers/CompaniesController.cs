@@ -1,8 +1,10 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ShiftMate.API.Data;
 using ShiftMate.API.DTOs.Companies;
 using ShiftMate.API.Models;
+using ShiftMate.API.Services.Authentication;
 
 namespace ShiftMate.API.Controllers;
 
@@ -11,16 +13,32 @@ namespace ShiftMate.API.Controllers;
 public class CompaniesController : ControllerBase
 {
     private readonly ShiftMateDbContext _context;
+    private readonly ICurrentUserService _currentUserService;
+    private readonly IAccessControlService _accessControlService;
 
-    public CompaniesController(ShiftMateDbContext context)
+    public CompaniesController(
+        ShiftMateDbContext context,
+        ICurrentUserService currentUserService,
+        IAccessControlService accessControlService)
     {
         _context = context;
+        _currentUserService = currentUserService;
+        _accessControlService = accessControlService;
     }
 
+    [Authorize]
     [HttpGet]
     public async Task<ActionResult<IEnumerable<CompanyResponse>>> GetCompanies()
     {
+        var companyId = _currentUserService.CompanyId;
+
+        if (!companyId.HasValue)
+        {
+            return Unauthorized();
+        }
+
         var companies = await _context.Companies
+            .Where(c => c.Id == companyId.Value)
             .Select(c => new CompanyResponse
             {
                 Id = c.Id,
@@ -34,9 +52,15 @@ public class CompaniesController : ControllerBase
         return Ok(companies);
     }
 
+    [Authorize]
     [HttpGet("{id:int}")]
     public async Task<ActionResult<CompanyResponse>> GetCompany(int id)
     {
+        if (!_accessControlService.IsCompanyAllowed(id))
+        {
+            return Forbid();
+        }
+
         var company = await _context.Companies
             .Where(c => c.Id == id)
             .Select(c => new CompanyResponse
@@ -49,7 +73,7 @@ public class CompaniesController : ControllerBase
             })
             .FirstOrDefaultAsync();
 
-        if (company == null)
+        if (company is null)
         {
             return NotFound();
         }
@@ -58,7 +82,8 @@ public class CompaniesController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<CompanyResponse>> CreateCompany(CreateCompanyRequest request)
+    public async Task<ActionResult<CompanyResponse>> CreateCompany(
+        CreateCompanyRequest request)
     {
         var company = new Company
         {
@@ -69,6 +94,7 @@ public class CompaniesController : ControllerBase
         };
 
         _context.Companies.Add(company);
+
         await _context.SaveChangesAsync();
 
         var response = new CompanyResponse
@@ -82,7 +108,7 @@ public class CompaniesController : ControllerBase
 
         return CreatedAtAction(
             nameof(GetCompany),
-            new { id = response.Id }, 
+            new { id = response.Id },
             response);
     }
 }

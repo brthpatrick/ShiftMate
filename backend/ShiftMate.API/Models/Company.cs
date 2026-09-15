@@ -17,4 +17,6 @@ public class Company
     public ICollection<Department> Departments { get; set; } = new List<Department>();
 
     public ICollection<Employee> Employees { get; set; } = new List<Employee>();
+
+    public ICollection<User> Users { get; set; } = new List<User>();
 }

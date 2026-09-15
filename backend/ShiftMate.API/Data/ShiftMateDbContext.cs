@@ -36,6 +36,8 @@ public class ShiftMateDbContext : DbContext
 
     public DbSet<EmployeeDayPreference> EmployeeDayPreferences { get; set; }
 
+    public DbSet<User> Users { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -189,6 +191,29 @@ public class ShiftMateDbContext : DbContext
                 edp.DayOfWeek 
             })
             .IsUnique();
+        });
+
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.HasIndex(u => u.Email)
+                .IsUnique();
+
+            entity.Property(u => u.Email)
+                .HasMaxLength(255)
+                .IsRequired();
+
+            entity.Property(u => u.PasswordHash)
+                .IsRequired();
+
+            entity.HasOne(u => u.Company)
+                .WithMany(c => c.Users)
+                .HasForeignKey(u => u.CompanyId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(u => u.Employee)
+                .WithOne(e => e.User)
+                .HasForeignKey<User>(u => u.EmployeeId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 }

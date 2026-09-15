@@ -1,26 +1,44 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ShiftMate.API.Data;
 using ShiftMate.API.DTOs.Locations;
 using ShiftMate.API.Models;
+using ShiftMate.API.Services.Authentication;
 
 namespace ShiftMate.API.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class LocationController : ControllerBase
 {
     private readonly ShiftMateDbContext _context;
+    private readonly IAccessControlService _accessControlService;
+    private readonly ICurrentUserService _currentUserService;
 
-    public LocationController(ShiftMateDbContext context)
+    public LocationController(
+        ShiftMateDbContext context,
+        IAccessControlService accessControlService,
+        ICurrentUserService currentUserService)
     {
         _context = context;
+        _accessControlService = accessControlService;
+        _currentUserService = currentUserService;
     }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<LocationResponse>>> GetLocations()
     {
+        var companyId = _currentUserService.CompanyId;
+
+        if (!companyId.HasValue)
+        {
+            return Unauthorized();
+        }
+
         var locations = await _context.Locations
+            .Where(l => l.CompanyId == companyId.Value)
             .Select(l => new LocationResponse
             {
                 Id = l.Id,
@@ -54,6 +72,11 @@ public class LocationController : ControllerBase
             return NotFound();
         }
 
+        if (!_accessControlService.IsCompanyAllowed(location.CompanyId))
+        {
+            return Forbid();
+        }
+
         return Ok(location);
     }
 
@@ -61,6 +84,12 @@ public class LocationController : ControllerBase
     public async Task<ActionResult<LocationResponse>> CreateLocation(
         CreateLocationRequest request)
     {
+        if (!_currentUserService.CompanyId.HasValue ||
+            !_accessControlService.IsCompanyAllowed(request.CompanyId))
+        {
+            return Forbid();
+        }
+
         var companyExists = await _context.Companies
             .AnyAsync(c => c.Id == request.CompanyId);
 
@@ -70,13 +99,14 @@ public class LocationController : ControllerBase
         }
 
         var locationExists = await _context.Locations
-            .AnyAsync(l => 
-                l.CompanyId == request.CompanyId && 
+            .AnyAsync(l =>
+                l.CompanyId == request.CompanyId &&
                 l.Name == request.Name);
 
         if (locationExists)
         {
-            return Conflict("A location with this name already exists in the company.");
+            return Conflict(
+                "A location with this name already exists in the company.");
         }
 
         var location = new Location

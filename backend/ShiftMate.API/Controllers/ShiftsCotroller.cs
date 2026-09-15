@@ -1,30 +1,48 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ShiftMate.API.Data;
 using ShiftMate.API.DTOs.Shifts;
 using ShiftMate.API.Models;
+using ShiftMate.API.Services.Authentication;
 using ShiftMate.API.Services.Scheduling;
 
 namespace ShiftMate.API.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class ShiftsController : ControllerBase
 {
     private readonly ShiftMateDbContext _context;
-
     private readonly IShiftStatusService _statusService;
+    private readonly IAccessControlService _accessControlService;
+    private readonly ICurrentUserService _currentUserService;
 
-    public ShiftsController(ShiftMateDbContext context, IShiftStatusService statusService)
+    public ShiftsController(
+        ShiftMateDbContext context,
+        IShiftStatusService statusService,
+        IAccessControlService accessControlService,
+        ICurrentUserService currentUserService)
     {
         _context = context;
         _statusService = statusService;
+        _accessControlService = accessControlService;
+        _currentUserService = currentUserService;
     }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ShiftResponse>>> GetShifts()
     {
+        var companyId = _currentUserService.CompanyId;
+
+        if (!companyId.HasValue)
+        {
+            return Unauthorized();
+        }
+
         var shifts = await _context.Shifts
+            .Where(s => s.Location.CompanyId == companyId.Value)
             .Select(s => new ShiftResponse
             {
                 Id = s.Id,
@@ -64,24 +82,38 @@ public class ShiftsController : ControllerBase
             return NotFound();
         }
 
+        if (!await _accessControlService.IsShiftAllowedAsync(id))
+        {
+            return Forbid();
+        }
+
         return Ok(shift);
     }
 
+    [Authorize(Roles = "Admin,Manager")]
     [HttpPost]
     public async Task<ActionResult<ShiftResponse>> CreateShift(
         CreateShiftRequest request)
     {
         if (request.EndTime <= request.StartTime)
         {
-            return BadRequest("End time must be later than start time.");
+            return BadRequest(
+                "End time must be later than start time.");
         }
 
-        var locationExists = await _context.Locations
-            .AnyAsync(l => l.Id == request.LocationId);
+        var location = await _context.Locations
+            .FirstOrDefaultAsync(l => l.Id == request.LocationId);
 
-        if (!locationExists)
+        if (location is null)
         {
-            return BadRequest("The specified location does not exist.");
+            return BadRequest(
+                "The specified location does not exist.");
+        }
+
+        if (!_accessControlService.IsCompanyAllowed(
+                location.CompanyId))
+        {
+            return Forbid();
         }
 
         var shift = new Shift
@@ -118,25 +150,34 @@ public class ShiftsController : ControllerBase
             response);
     }
 
+    [Authorize(Roles = "Admin,Manager")]
     [HttpPatch("{id:int}/status")]
     public async Task<IActionResult> UpdateStatus(
         int id,
         UpdateShiftStatusRequest request)
     {
+        if (!await _accessControlService.IsShiftAllowedAsync(id))
+        {
+            var shiftExists = await _context.Shifts
+                .AnyAsync(s => s.Id == id);
+
+            if (!shiftExists)
+            {
+                return NotFound(new
+                {
+                    message = "The shift does not exist."
+                });
+            }
+
+            return Forbid();
+        }
+
         var result = await _statusService.ChangeStatusAsync(
             id,
             request.Status);
 
         if (!result.Success)
         {
-            if (result.Error == "The shift does not exist.")
-            {
-                return NotFound(new
-                {
-                    message = result.Error
-                });
-            }
-
             return BadRequest(new
             {
                 message = result.Error

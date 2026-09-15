@@ -1,26 +1,44 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ShiftMate.API.Data;
 using ShiftMate.API.DTOs.Employees;
 using ShiftMate.API.Models;
+using ShiftMate.API.Services.Authentication;
 
 namespace ShiftMate.API.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class EmployeesController : ControllerBase
 {
     private readonly ShiftMateDbContext _context;
+    private readonly IAccessControlService _accessControlService;
+    private readonly ICurrentUserService _currentUserService;
 
-    public EmployeesController(ShiftMateDbContext context)
+    public EmployeesController(
+        ShiftMateDbContext context,
+        IAccessControlService accessControlService,
+        ICurrentUserService currentUserService)
     {
         _context = context;
+        _accessControlService = accessControlService;
+        _currentUserService = currentUserService;
     }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<EmployeeResponse>>> GetEmployees()
     {
+        var companyId = _currentUserService.CompanyId;
+
+        if (!companyId.HasValue)
+        {
+            return Unauthorized();
+        }
+
         var employees = await _context.Employees
+            .Where(e => e.CompanyId == companyId.Value)
             .Select(e => new EmployeeResponse
             {
                 Id = e.Id,
@@ -62,12 +80,24 @@ public class EmployeesController : ControllerBase
             return NotFound();
         }
 
+        if (!await _accessControlService.IsEmployeeAllowedAsync(id))
+        {
+            return Forbid();
+        }
+
         return Ok(employee);
     }
 
     [HttpPost]
-    public async Task<ActionResult<EmployeeResponse>> CreateEmployee(CreateEmployeeRequest request)
+    public async Task<ActionResult<EmployeeResponse>> CreateEmployee(
+        CreateEmployeeRequest request)
     {
+        if (!_currentUserService.CompanyId.HasValue ||
+            !_accessControlService.IsCompanyAllowed(request.CompanyId))
+        {
+            return Forbid();
+        }
+
         var companyExists = await _context.Companies
             .AnyAsync(c => c.Id == request.CompanyId);
 
@@ -77,13 +107,14 @@ public class EmployeesController : ControllerBase
         }
 
         var departmentExists = await _context.Departments
-            .AnyAsync(d => 
-                d.Id == request.DepartmentId && 
+            .AnyAsync(d =>
+                d.Id == request.DepartmentId &&
                 d.CompanyId == request.CompanyId);
 
         if (!departmentExists)
         {
-            return BadRequest("The specified department does not exist or does not belong to the specified company.");
+            return BadRequest(
+                "The specified department does not exist or does not belong to the specified company.");
         }
 
         var emailExists = await _context.Employees
@@ -91,7 +122,8 @@ public class EmployeesController : ControllerBase
 
         if (emailExists)
         {
-            return BadRequest("An employee with the specified email already exists.");
+            return BadRequest(
+                "An employee with the specified email already exists.");
         }
 
         var employee = new Employee

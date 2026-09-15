@@ -35,4 +35,6 @@ public class Employee
     public ICollection<EmployeePreference> Preferences { get; set; } = new List<EmployeePreference>();
 
     public ICollection<EmployeeDayPreference> DayPreferences { get; set; } = new List<EmployeeDayPreference>();
+
+    public User? User { get; set; } 
 }
