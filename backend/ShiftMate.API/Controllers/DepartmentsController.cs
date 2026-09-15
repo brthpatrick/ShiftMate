@@ -76,43 +76,51 @@ public class DepartmentsController : ControllerBase
         return Ok(department);
     }
 
+    [Authorize(Roles = "Admin,Manager")]
     [HttpPost]
     public async Task<ActionResult<DepartmentResponse>> CreateDepartment(
-        CreateDepartmentRequest request)
+    CreateDepartmentRequest request)
     {
-        if (!_currentUserService.CompanyId.HasValue ||
-            !_accessControlService.IsCompanyAllowed(request.CompanyId))
+        var currentCompanyId = _currentUserService.CompanyId;
+
+        if (!currentCompanyId.HasValue)
         {
-            return Forbid();
+            return Unauthorized();
         }
 
+        if (string.IsNullOrWhiteSpace(request.Name))
+        {
+            return BadRequest("Department name is required.");
+        }
+
+        var name = request.Name.Trim();
+
         var companyExists = await _context.Companies
-            .AnyAsync(c => c.Id == request.CompanyId);
+            .AnyAsync(c => c.Id == currentCompanyId.Value);
 
         if (!companyExists)
         {
-            return BadRequest("The specified company does not exist.");
+            return BadRequest("The current company does not exist.");
         }
 
         var departmentExists = await _context.Departments
             .AnyAsync(d =>
-                d.Name == request.Name &&
-                d.CompanyId == request.CompanyId);
+                d.Name == name &&
+                d.CompanyId == currentCompanyId.Value);
 
         if (departmentExists)
         {
-            return BadRequest(
-                "A department with the same name already exists in the specified company.");
+            return Conflict(
+                "A department with the same name already exists in your company.");
         }
 
         var department = new Department
         {
-            Name = request.Name,
-            CompanyId = request.CompanyId
+            Name = name,
+            CompanyId = currentCompanyId.Value
         };
 
         _context.Departments.Add(department);
-
         await _context.SaveChangesAsync();
 
         var response = new DepartmentResponse
