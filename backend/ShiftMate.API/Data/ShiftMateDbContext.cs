@@ -57,6 +57,10 @@ public class ShiftMateDbContext : DbContext
             .HasForeignKey(sa => sa.ShiftId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        modelBuilder.Entity<ShiftAssignment>()
+            .HasIndex(sa => new {sa.EmployeeId, sa.ShiftId })
+            .IsUnique();
+
         modelBuilder.Entity<Company>(entity =>
         {
             entity.Property(c => c.Name)

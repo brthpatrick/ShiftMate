@@ -111,6 +111,14 @@ public class ShiftAssignmentsController : ControllerBase
 
         if (!employeeAllowed)
         {
+            var employeeExists = await _context.Employees
+                .AnyAsync(e => e.Id == request.EmployeeId);
+
+            if (!employeeExists)
+            {
+                return NotFound("The specified employee does not exist.");
+            }
+
             return Forbid();
         }
 
@@ -125,8 +133,7 @@ public class ShiftAssignmentsController : ControllerBase
 
             if (!shiftExists)
             {
-                return BadRequest(
-                    "The specified shift does not exist.");
+                return NotFound("The specified shift does not exist.");
             }
 
             return Forbid();
@@ -151,7 +158,6 @@ public class ShiftAssignmentsController : ControllerBase
         };
 
         _context.ShiftAssignments.Add(assignment);
-
         await _context.SaveChangesAsync();
 
         var response = await _context.ShiftAssignments
@@ -162,7 +168,7 @@ public class ShiftAssignmentsController : ControllerBase
                 ShiftId = sa.ShiftId,
                 EmployeeId = sa.EmployeeId,
                 EmployeeName = sa.Employee.FirstName + " " +
-                              sa.Employee.LastName,
+                               sa.Employee.LastName,
                 LocationName = sa.Shift.Location.Name,
                 ShiftStartTime = sa.Shift.StartTime,
                 ShiftEndTime = sa.Shift.EndTime,
@@ -199,6 +205,16 @@ public class ShiftAssignmentsController : ControllerBase
                 assignment.CompanyId))
         {
             return Forbid();
+        }
+
+        if (assignment.Entity.Status == "Cancelled")
+        {
+            return Conflict("The assignment is already cancelled.");
+        }
+
+        if (assignment.Entity.Status == "Completed")
+        {
+            return Conflict("A completed assignment cannot be cancelled.");
         }
 
         assignment.Entity.Status = "Cancelled";
