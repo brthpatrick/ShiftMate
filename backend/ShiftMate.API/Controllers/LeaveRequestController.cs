@@ -133,6 +133,7 @@ public class LeaveRequestsController : ControllerBase
         return Ok(leaveRequests);
     }
 
+    [Authorize(Roles = "Admin,Manager")]
     [HttpPost]
     public async Task<ActionResult<LeaveRequestResponse>>
         CreateLeaveRequest(CreateLeaveRequest request)
@@ -148,7 +149,7 @@ public class LeaveRequestsController : ControllerBase
 
         if (employee is null)
         {
-            return BadRequest(
+            return NotFound(
                 "The specified employee does not exist.");
         }
 
@@ -176,7 +177,7 @@ public class LeaveRequestsController : ControllerBase
             EmployeeId = request.EmployeeId,
             StartDate = request.StartDate,
             EndDate = request.EndDate,
-            Reason = request.Reason,
+            Reason = request.Reason?.Trim(),
             Status = "Pending",
             CreatedAt = DateTime.UtcNow
         };
