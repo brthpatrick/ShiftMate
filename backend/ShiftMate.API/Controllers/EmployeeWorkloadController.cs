@@ -29,6 +29,7 @@ public class EmployeeWorkloadController : ControllerBase
         _currentUserService = currentUserService;
     }
 
+    [Authorize(Roles = "Admin,Manager")]
     [HttpGet("{employeeId:int}")]
     public async Task<IActionResult> GetWorkload(int employeeId)
     {
