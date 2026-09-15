@@ -93,6 +93,7 @@ public class EmployeeDayPreferencesController : ControllerBase
         return Ok(preferences);
     }
 
+    [Authorize(Roles = "Admin,Manager")]
     [HttpPost]
     public async Task<ActionResult<EmployeeDayPreferenceResponse>>
         CreatePreference(CreateEmployeeDayPreferenceRequest request)
@@ -102,7 +103,7 @@ public class EmployeeDayPreferencesController : ControllerBase
 
         if (employee is null)
         {
-            return BadRequest(new
+            return NotFound(new
             {
                 message = "The employee does not exist."
             });
@@ -165,6 +166,7 @@ public class EmployeeDayPreferencesController : ControllerBase
             response);
     }
 
+    [Authorize(Roles = "Admin,Manager")]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeletePreference(int id)
     {
