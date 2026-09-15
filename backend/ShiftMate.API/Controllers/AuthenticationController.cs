@@ -1,5 +1,5 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ShiftMate.API.Data;
 using ShiftMate.API.DTOs.Authentication;
@@ -14,9 +14,7 @@ public class AuthenticationController : ControllerBase
 {
     private readonly ShiftMateDbContext _context;
     private readonly IPasswordService _passwordService;
-
     private readonly IJwtService _jwtService;
-
     private readonly ICurrentUserService _currentUserService;
 
     public AuthenticationController(
@@ -31,9 +29,136 @@ public class AuthenticationController : ControllerBase
         _currentUserService = currentUserService;
     }
 
-    [HttpPost("register")]
-    public async Task<IActionResult> Register(RegisterRequest request)
+    [HttpPost("register-company")]
+    public async Task<IActionResult> RegisterCompany(
+        RegisterCompanyRequest request)
     {
+        var companyName = request.CompanyName.Trim();
+        var companyEmail = request.CompanyEmail.Trim().ToLower();
+        var email = request.Email.Trim().ToLower();
+
+        if (string.IsNullOrWhiteSpace(companyName))
+        {
+            return BadRequest(new
+            {
+                message = "Company name is required."
+            });
+        }
+
+        if (string.IsNullOrWhiteSpace(companyEmail))
+        {
+            return BadRequest(new
+            {
+                message = "Company email is required."
+            });
+        }
+
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return BadRequest(new
+            {
+                message = "Email is required."
+            });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Password))
+        {
+            return BadRequest(new
+            {
+                message = "Password is required."
+            });
+        }
+
+        if (request.Password.Length < 8)
+        {
+            return BadRequest(new
+            {
+                message = "Password must contain at least 8 characters."
+            });
+        }
+
+        var companyEmailExists = await _context.Companies
+            .AnyAsync(c => c.Email.ToLower() == companyEmail);
+
+        if (companyEmailExists)
+        {
+            return Conflict(new
+            {
+                message = "A company with this email already exists."
+            });
+        }
+
+        var userEmailExists = await _context.Users
+            .AnyAsync(u => u.Email == email);
+
+        if (userEmailExists)
+        {
+            return Conflict(new
+            {
+                message = "A user with this email already exists."
+            });
+        }
+
+        var company = new Company
+        {
+            Name = companyName,
+            Email = companyEmail,
+            Phone = request.CompanyPhone?.Trim(),
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.Companies.Add(company);
+        await _context.SaveChangesAsync();
+
+        var user = new User
+        {
+            CompanyId = company.Id,
+            EmployeeId = null,
+            Email = email,
+            Role = UserRole.Admin,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        user.PasswordHash = _passwordService.HashPassword(
+            user,
+            request.Password);
+
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        var response = new RegisterResponse
+        {
+            Id = user.Id,
+            CompanyId = user.CompanyId,
+            EmployeeId = user.EmployeeId,
+            Email = user.Email,
+            Role = user.Role,
+            IsActive = user.IsActive,
+            CreatedAt = user.CreatedAt
+        };
+
+        return CreatedAtAction(
+            nameof(RegisterCompany),
+            new { id = user.Id },
+            response);
+    }
+
+    [Authorize(Roles = "Admin,Manager")]
+    [HttpPost("register")]
+    public async Task<IActionResult> Register(
+        RegisterRequest request)
+    {
+        var currentCompanyId = _currentUserService.CompanyId;
+
+        if (!currentCompanyId.HasValue)
+        {
+            return Unauthorized(new
+            {
+                message = "The current user is not associated with a company."
+            });
+        }
+
         var email = request.Email.Trim().ToLower();
 
         if (string.IsNullOrWhiteSpace(email))
@@ -60,15 +185,9 @@ public class AuthenticationController : ControllerBase
             });
         }
 
-        var companyExists = await _context.Companies
-            .AnyAsync(c => c.Id == request.CompanyId);
-
-        if (!companyExists)
+        if (request.Role == UserRole.Admin)
         {
-            return BadRequest(new
-            {
-                message = "The company does not exist."
-            });
+            return Forbid();
         }
 
         if (request.EmployeeId.HasValue)
@@ -85,11 +204,20 @@ public class AuthenticationController : ControllerBase
                 });
             }
 
-            if (employee.CompanyId != request.CompanyId)
+            if (employee.CompanyId != currentCompanyId.Value)
             {
-                return BadRequest(new
+                return Forbid();
+            }
+
+            var employeeAlreadyHasUser = await _context.Users
+                .AnyAsync(u =>
+                    u.EmployeeId == request.EmployeeId.Value);
+
+            if (employeeAlreadyHasUser)
+            {
+                return Conflict(new
                 {
-                    message = "The employee does not belong to the selected company."
+                    message = "This employee already has a user account."
                 });
             }
         }
@@ -107,7 +235,7 @@ public class AuthenticationController : ControllerBase
 
         var user = new User
         {
-            CompanyId = request.CompanyId,
+            CompanyId = currentCompanyId.Value,
             EmployeeId = request.EmployeeId,
             Email = email,
             Role = request.Role,
@@ -120,7 +248,6 @@ public class AuthenticationController : ControllerBase
             request.Password);
 
         _context.Users.Add(user);
-
         await _context.SaveChangesAsync();
 
         var response = new RegisterResponse
@@ -141,7 +268,8 @@ public class AuthenticationController : ControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login(LoginRequest request)
+    public async Task<IActionResult> Login(
+        LoginRequest request)
     {
         var email = request.Email.Trim().ToLower();
 
