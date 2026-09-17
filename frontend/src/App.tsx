@@ -1,44 +1,32 @@
-import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
 import ProtectedRoute from './components/ProtectedRoute'
-import { useAuth } from './context/AuthContext'
+import MainLayout from './layouts/MainLayout'
 
-function Dashboard() {
-  const { logout } = useAuth()
-  const navigate = useNavigate()
-
-  const handleLogout = () => {
-    logout()
-    navigate('/login')
-  }
-
+function DashboardPage() {
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="border-b bg-white">
-        <div className="flex items-center justify-between px-8 py-4">
-          <h1 className="text-xl font-bold text-gray-900">
-            ShiftMate
-          </h1>
+    <div>
+      <h1 className="text-2xl font-bold text-gray-900">
+        Dashboard
+      </h1>
 
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-gray-700"
-          >
-            Sign out
-          </button>
-        </div>
-      </header>
+      <p className="mt-2 text-gray-500">
+        Welcome to ShiftMate.
+      </p>
+    </div>
+  )
+}
 
-      <main className="p-8">
-        <h2 className="text-2xl font-bold text-gray-900">
-          Dashboard
-        </h2>
+function PlaceholderPage({ title }: { title: string }) {
+  return (
+    <div>
+      <h1 className="text-2xl font-bold text-gray-900">
+        {title}
+      </h1>
 
-        <p className="mt-2 text-gray-500">
-          Welcome to ShiftMate.
-        </p>
-      </main>
+      <p className="mt-2 text-gray-500">
+        This page is under development.
+      </p>
     </div>
   )
 }
@@ -50,13 +38,39 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
 
         <Route
-          path="/"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <MainLayout />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route path="/" element={<DashboardPage />} />
+
+          <Route
+            path="/employees"
+            element={<PlaceholderPage title="Employees" />}
+          />
+
+          <Route
+            path="/shifts"
+            element={<PlaceholderPage title="Shifts" />}
+          />
+
+          <Route
+            path="/assignments"
+            element={<PlaceholderPage title="Assignments" />}
+          />
+
+          <Route
+            path="/availability"
+            element={<PlaceholderPage title="Availability" />}
+          />
+
+          <Route
+            path="/leave-requests"
+            element={<PlaceholderPage title="Leave Requests" />}
+          />
+        </Route>
       </Routes>
     </BrowserRouter>
   )
