@@ -3,6 +3,7 @@ import LoginPage from './pages/LoginPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import MainLayout from './layouts/MainLayout'
 import DashboardPage from './pages/DashboardPage'
+import EmployeesPage from './pages/EmployeesPage'
 
 
 function PlaceholderPage({ title }: { title: string }) {
@@ -36,7 +37,7 @@ function App() {
 
           <Route
             path="/employees"
-            element={<PlaceholderPage title="Employees" />}
+            element={<EmployeesPage />}
           />
 
           <Route

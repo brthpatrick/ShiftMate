@@ -180,4 +180,94 @@ public class EmployeesController : ControllerBase
             new { id = employee.Id },
             response);
     }
+
+    [Authorize(Roles = "Admin,Manager")]
+    [HttpPut("{id:int}")]
+    public async Task<ActionResult<EmployeeResponse>> UpdateEmployee(
+    int id,
+    UpdateEmployeeRequest request)
+    {
+        var currentCompanyId = _currentUserService.CompanyId;
+
+        if (!currentCompanyId.HasValue)
+        {
+            return Unauthorized();
+        }
+
+        if (string.IsNullOrWhiteSpace(request.FirstName))
+        {
+            return BadRequest("First name is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.LastName))
+        {
+            return BadRequest("Last name is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Email))
+        {
+            return BadRequest("Email is required.");
+        }
+
+        var employee = await _context.Employees
+            .FirstOrDefaultAsync(e =>
+                e.Id == id &&
+                e.CompanyId == currentCompanyId.Value);
+
+        if (employee == null)
+        {
+            return NotFound();
+        }
+
+        var departmentExists = await _context.Departments
+            .AnyAsync(d =>
+                d.Id == request.DepartmentId &&
+                d.CompanyId == currentCompanyId.Value);
+
+        if (!departmentExists)
+        {
+            return BadRequest(
+                "The specified department does not exist or does not belong to your company.");
+        }
+
+        var email = request.Email.Trim().ToLower();
+
+        var emailExists = await _context.Employees
+            .AnyAsync(e =>
+                e.Email == email &&
+                e.Id != id);
+
+        if (emailExists)
+        {
+            return Conflict(
+                "An employee with the specified email already exists.");
+        }
+
+        employee.DepartmentId = request.DepartmentId;
+        employee.FirstName = request.FirstName.Trim();
+        employee.LastName = request.LastName.Trim();
+        employee.Email = email;
+        employee.Phone = string.IsNullOrWhiteSpace(request.Phone)
+            ? null
+            : request.Phone.Trim();
+        employee.HireDate = request.HireDate;
+        employee.IsActive = request.IsActive;
+
+        await _context.SaveChangesAsync();
+
+        var response = new EmployeeResponse
+        {
+            Id = employee.Id,
+            CompanyId = employee.CompanyId,
+            DepartmentId = employee.DepartmentId,
+            FirstName = employee.FirstName,
+            LastName = employee.LastName,
+            Email = employee.Email,
+            Phone = employee.Phone,
+            HireDate = employee.HireDate,
+            IsActive = employee.IsActive
+        };
+
+        return Ok(response);
+    }
 }

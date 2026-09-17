@@ -9,3 +9,22 @@ export interface Employee {
     hireDate: string
     isActive: boolean
 }
+
+export interface CreateEmployeeRequest {
+    firstName: string
+    lastName: string
+    email: string
+    phone: string 
+    departmentId: number
+    hireDate: string
+}
+
+export interface UpdateEmployeeRequest {
+    firstName: string
+    lastName: string
+    email: string
+    phone: string
+    departmentId: number
+    hireDate: string
+    isActive: boolean
+}
