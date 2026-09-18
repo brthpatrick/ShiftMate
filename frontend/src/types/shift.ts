@@ -8,3 +8,15 @@ export interface Shift {
     notes: string | null
     status: number
 }
+
+export interface CreateShiftRequest {
+    locationId: number
+    startTime: string
+    endTime: string
+    requiredEmployees: number
+    notes: string
+}
+
+export interface UpdateShiftStatusRequest {
+    status: number
+}

@@ -4,6 +4,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import MainLayout from './layouts/MainLayout'
 import DashboardPage from './pages/DashboardPage'
 import EmployeesPage from './pages/EmployeesPage'
+import ShiftsPage from './pages/ShiftsPage'
 
 
 function PlaceholderPage({ title }: { title: string }) {
@@ -42,7 +43,7 @@ function App() {
 
           <Route
             path="/shifts"
-            element={<PlaceholderPage title="Shifts" />}
+            element={<ShiftsPage />}
           />
 
           <Route
