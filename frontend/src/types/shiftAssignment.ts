@@ -9,3 +9,8 @@ export interface ShiftAssignment {
     assignedAt: string
     status: string
 }
+
+export  interface AssignEmployeeToShiftRequest {
+    shiftId: number
+    employeeId: number
+}

@@ -5,6 +5,7 @@ import MainLayout from './layouts/MainLayout'
 import DashboardPage from './pages/DashboardPage'
 import EmployeesPage from './pages/EmployeesPage'
 import ShiftsPage from './pages/ShiftsPage'
+import AssignmentsPage from './pages/AssignmentsPage'
 
 
 function PlaceholderPage({ title }: { title: string }) {
@@ -48,7 +49,7 @@ function App() {
 
           <Route
             path="/assignments"
-            element={<PlaceholderPage title="Assignments" />}
+            element={<AssignmentsPage />}
           />
 
           <Route
