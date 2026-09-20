@@ -8,6 +8,7 @@ import ShiftsPage from './pages/ShiftsPage'
 import AssignmentsPage from './pages/AssignmentsPage'
 import AvailabilityPage from './pages/AvailabilityPage'
 import LeaveRequestsPage from './pages/LeaveRequestsPage'
+import EmployeePreferencesPage from './pages/EmployeePreferencesPage'
 
 
 function App() {
@@ -48,6 +49,11 @@ function App() {
           <Route
             path="/leave-requests"
             element={<LeaveRequestsPage />}
+          />
+
+          <Route
+            path="/employee-preferences"
+            element={<EmployeePreferencesPage />}
           />
         </Route>
       </Routes>

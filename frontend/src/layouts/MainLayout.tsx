@@ -17,6 +17,7 @@ function MainLayout() {
         { label: 'Assignments', path: '/assignments' },
         { label: 'Availability', path: '/availability' },
         { label: 'Leave Requests', path: '/leave-requests' },
+        { label: 'Employee Preferences', path: '/employee-preferences' },
     ]
 
     return (
