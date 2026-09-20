@@ -7,21 +7,8 @@ import EmployeesPage from './pages/EmployeesPage'
 import ShiftsPage from './pages/ShiftsPage'
 import AssignmentsPage from './pages/AssignmentsPage'
 import AvailabilityPage from './pages/AvailabilityPage'
+import LeaveRequestsPage from './pages/LeaveRequestsPage'
 
-
-function PlaceholderPage({ title }: { title: string }) {
-  return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-900">
-        {title}
-      </h1>
-
-      <p className="mt-2 text-gray-500">
-        This page is under development.
-      </p>
-    </div>
-  )
-}
 
 function App() {
   return (
@@ -60,7 +47,7 @@ function App() {
 
           <Route
             path="/leave-requests"
-            element={<PlaceholderPage title="Leave Requests" />}
+            element={<LeaveRequestsPage />}
           />
         </Route>
       </Routes>

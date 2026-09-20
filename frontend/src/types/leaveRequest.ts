@@ -8,3 +8,10 @@ export interface LeaveRequest {
     status: string
     createdAt: string
 }
+
+export interface CreateLeaveRequest {
+    employeeId: number
+    startDate: string
+    endDate: string
+    reason: string
+}
