@@ -18,6 +18,7 @@ function MainLayout() {
         { label: 'Availability', path: '/availability' },
         { label: 'Leave Requests', path: '/leave-requests' },
         { label: 'Employee Preferences', path: '/employee-preferences' },
+{ label: 'Employee Day Preferences', path: '/employee-day-preferences' },  
     ]
 
     return (

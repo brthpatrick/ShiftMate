@@ -9,7 +9,7 @@ import AssignmentsPage from './pages/AssignmentsPage'
 import AvailabilityPage from './pages/AvailabilityPage'
 import LeaveRequestsPage from './pages/LeaveRequestsPage'
 import EmployeePreferencesPage from './pages/EmployeePreferencesPage'
-
+import EmployeeDayPreferencesPage from './pages/EmployeeDayPreferencesPage'
 
 function App() {
   return (
@@ -54,6 +54,11 @@ function App() {
           <Route
             path="/employee-preferences"
             element={<EmployeePreferencesPage />}
+          />
+
+          <Route
+            path="/employee-day-preferences"
+            element={<EmployeeDayPreferencesPage />}
           />
         </Route>
       </Routes>
