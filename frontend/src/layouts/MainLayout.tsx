@@ -20,6 +20,7 @@ function MainLayout() {
         { label: 'Employee Preferences', path: '/employee-preferences' },
         { label: 'Employee Day Preferences', path: '/employee-day-preferences' },
         { label: 'Roles', path: '/roles' },
+        { label: 'Employee Roles', path: '/employee-roles' },
     ]
 
     return (
