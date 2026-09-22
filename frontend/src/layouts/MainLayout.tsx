@@ -21,6 +21,8 @@ function MainLayout() {
         { label: 'Employee Day Preferences', path: '/employee-day-preferences' },
         { label: 'Roles', path: '/roles' },
         { label: 'Employee Roles', path: '/employee-roles' },
+        { label: 'Departments', path: '/departments' },
+        { label: 'Locations', path: '/locations' },
     ]
 
     return (

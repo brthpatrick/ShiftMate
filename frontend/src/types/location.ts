@@ -5,3 +5,9 @@ export interface Location {
     address: string | null
     city: string | null
 }
+
+export interface CreateLocationRequest {
+    name: string
+    address: string
+    city: string
+}
