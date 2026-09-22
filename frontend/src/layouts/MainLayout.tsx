@@ -18,7 +18,8 @@ function MainLayout() {
         { label: 'Availability', path: '/availability' },
         { label: 'Leave Requests', path: '/leave-requests' },
         { label: 'Employee Preferences', path: '/employee-preferences' },
-{ label: 'Employee Day Preferences', path: '/employee-day-preferences' },  
+        { label: 'Employee Day Preferences', path: '/employee-day-preferences' },
+        { label: 'Roles', path: '/roles' },
     ]
 
     return (
@@ -40,13 +41,12 @@ function MainLayout() {
                             to={item.path}
                             end={item.path === '/'}
                             className={({ isActive }) =>
-                                `block rounded-lg px-4 py-3 text-sm font-medium transition ${
-                                    isActive
-                                        ? 'bg-gray-900 text-white'
-                                        : 'text-gray-700 hover:bg-gray-100'
+                                `block rounded-lg px-4 py-3 text-sm font-medium transition ${isActive
+                                    ? 'bg-gray-900 text-white'
+                                    : 'text-gray-700 hover:bg-gray-100'
                                 }`
                             }
-                            >
+                        >
                             {item.label}
                         </NavLink>
                     ))}
