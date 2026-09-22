@@ -14,6 +14,7 @@ import RolesPage from './pages/RolesPage'
 import EmployeeRolesPage from './pages/EmployeeRolesPage'
 import DepartmentsPage from './pages/DepartmentsPage'
 import LocationsPage from './pages/LocationsPage'
+import SchedulingCandidatesPage from './pages/SchedulingCandidatesPage'
 
 
 function App() {
@@ -84,6 +85,11 @@ function App() {
           <Route
             path="/locations"
             element={<LocationsPage />}
+          />
+
+          <Route
+            path="/scheduling-candidates"
+            element={<SchedulingCandidatesPage />}
           />
         </Route>
       </Routes>

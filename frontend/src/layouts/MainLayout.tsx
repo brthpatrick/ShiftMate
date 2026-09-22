@@ -23,6 +23,7 @@ function MainLayout() {
         { label: 'Employee Roles', path: '/employee-roles' },
         { label: 'Departments', path: '/departments' },
         { label: 'Locations', path: '/locations' },
+        { label: 'Scheduling Candidates', path: '/scheduling-candidates' },
     ]
 
     return (

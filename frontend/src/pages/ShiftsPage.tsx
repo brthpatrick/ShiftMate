@@ -195,14 +195,9 @@ function ShiftsPage() {
 
             const request: CreateShiftRequest = {
                 locationId: formData.locationId,
-                startTime: new Date(
-                    formData.startTime,
-                ).toISOString(),
-                endTime: new Date(
-                    formData.endTime,
-                ).toISOString(),
-                requiredEmployees:
-                    formData.requiredEmployees,
+                startTime: `${formData.startTime}:00`,
+                endTime: `${formData.endTime}:00`,
+                requiredEmployees: formData.requiredEmployees,
                 notes: formData.notes.trim(),
             }
 
