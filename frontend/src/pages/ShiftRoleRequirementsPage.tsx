@@ -71,6 +71,7 @@ function ShiftRoleRequirementsPage() {
         setRoleId('')
         setRequiredEmployees(1)
         setFormError('')
+        setSuccess('')
     }
 
     const handleCreate = async (
@@ -114,7 +115,10 @@ function ShiftRoleRequirementsPage() {
                 created,
             ])
 
-            resetForm()
+            setShiftId('')
+            setRoleId('')
+            setRequiredEmployees(1)
+
             setSuccess(
                 'Shift role requirement created successfully.',
             )
@@ -149,6 +153,10 @@ function ShiftRoleRequirementsPage() {
         }
     }
 
+    const handleClearSearch = () => {
+        setSearchTerm('')
+    }
+
     const filteredRequirements = requirements.filter(
         (requirement) => {
             const shift = shifts.find(
@@ -158,6 +166,10 @@ function ShiftRoleRequirementsPage() {
             const search = searchTerm
                 .toLowerCase()
                 .trim()
+
+            if (!search) {
+                return true
+            }
 
             const roleName =
                 requirement.roleName.toLowerCase()
@@ -175,10 +187,12 @@ function ShiftRoleRequirementsPage() {
         },
     )
 
+    const isDeleting = deletingId !== null
+
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center py-20">
-                <p className="text-gray-500">
+            <div className="flex min-h-[300px] items-center justify-center">
+                <p className="text-sm text-gray-500">
                     Loading shift role requirements...
                 </p>
             </div>
@@ -187,26 +201,29 @@ function ShiftRoleRequirementsPage() {
 
     if (error && requirements.length === 0) {
         return (
-            <div className="rounded-lg bg-red-50 px-4 py-3 text-red-600">
+            <div
+                role="alert"
+                className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            >
                 {error}
             </div>
         )
     }
 
     return (
-        <div>
-            <div className="mb-8">
+        <div className="space-y-6">
+            <div>
                 <h1 className="text-2xl font-bold text-gray-900">
                     Shift Role Requirements
                 </h1>
 
-                <p className="mt-2 text-gray-500">
+                <p className="mt-1 text-sm text-gray-500">
                     Define which roles and how many employees are
                     required for each shift.
                 </p>
             </div>
 
-            <div className="mb-8 rounded-xl bg-white p-6 shadow-sm">
+            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
                 <div className="mb-6">
                     <h2 className="text-lg font-semibold text-gray-900">
                         Add Requirement
@@ -219,14 +236,12 @@ function ShiftRoleRequirementsPage() {
                 </div>
 
                 {formError && (
-                    <div className="mb-6 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
+                    <div
+                        role="alert"
+                        aria-live="polite"
+                        className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+                    >
                         {formError}
-                    </div>
-                )}
-
-                {success && (
-                    <div className="mb-6 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-600">
-                        {success}
                     </div>
                 )}
 
@@ -250,15 +265,22 @@ function ShiftRoleRequirementsPage() {
                                     event.target.value === ''
                                         ? ''
                                         : Number(
-                                            event.target.value,
+                                            event.target
+                                                .value,
                                         ),
                                 )
                             }
-                            required
-                            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none focus:border-gray-500 focus:ring-1 focus:ring-gray-500"
+                            disabled={
+                                isSubmitting ||
+                                isDeleting ||
+                                shifts.length === 0
+                            }
+                            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
                         >
                             <option value="">
-                                Select shift
+                                {shifts.length === 0
+                                    ? 'No shifts available'
+                                    : 'Select shift'}
                             </option>
 
                             {shifts.map((shift) => (
@@ -273,6 +295,13 @@ function ShiftRoleRequirementsPage() {
                                 </option>
                             ))}
                         </select>
+
+                        {shifts.length === 0 && (
+                            <p className="mt-2 text-xs text-gray-500">
+                                Create a shift before adding a role
+                                requirement.
+                            </p>
+                        )}
                     </div>
 
                     <div>
@@ -291,15 +320,22 @@ function ShiftRoleRequirementsPage() {
                                     event.target.value === ''
                                         ? ''
                                         : Number(
-                                            event.target.value,
+                                            event.target
+                                                .value,
                                         ),
                                 )
                             }
-                            required
-                            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none focus:border-gray-500 focus:ring-1 focus:ring-gray-500"
+                            disabled={
+                                isSubmitting ||
+                                isDeleting ||
+                                roles.length === 0
+                            }
+                            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
                         >
                             <option value="">
-                                Select role
+                                {roles.length === 0
+                                    ? 'No roles available'
+                                    : 'Select role'}
                             </option>
 
                             {roles.map((role) => (
@@ -311,6 +347,13 @@ function ShiftRoleRequirementsPage() {
                                 </option>
                             ))}
                         </select>
+
+                        {roles.length === 0 && (
+                            <p className="mt-2 text-xs text-gray-500">
+                                Create a role before adding a role
+                                requirement.
+                            </p>
+                        )}
                     </div>
 
                     <div>
@@ -328,19 +371,29 @@ function ShiftRoleRequirementsPage() {
                             value={requiredEmployees}
                             onChange={(event) =>
                                 setRequiredEmployees(
-                                    Number(event.target.value),
+                                    Number(
+                                        event.target.value,
+                                    ),
                                 )
                             }
                             required
-                            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-gray-500 focus:ring-1 focus:ring-gray-500"
+                            disabled={
+                                isSubmitting || isDeleting
+                            }
+                            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
                         />
                     </div>
 
-                    <div className="flex gap-3 md:col-span-3">
+                    <div className="flex flex-col gap-3 sm:flex-row md:col-span-3">
                         <button
                             type="submit"
-                            disabled={isSubmitting}
-                            className="rounded-lg bg-gray-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            disabled={
+                                isSubmitting ||
+                                isDeleting ||
+                                shifts.length === 0 ||
+                                roles.length === 0
+                            }
+                            className="w-full rounded-lg bg-gray-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-300 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                         >
                             {isSubmitting
                                 ? 'Creating...'
@@ -350,7 +403,10 @@ function ShiftRoleRequirementsPage() {
                         <button
                             type="button"
                             onClick={resetForm}
-                            className="rounded-lg border border-gray-300 px-5 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+                            disabled={
+                                isSubmitting || isDeleting
+                            }
+                            className="w-full rounded-lg border border-gray-300 px-5 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                         >
                             Clear
                         </button>
@@ -359,128 +415,184 @@ function ShiftRoleRequirementsPage() {
             </div>
 
             {error && (
-                <div className="mb-6 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
+                <div
+                    role="alert"
+                    aria-live="polite"
+                    className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+                >
                     {error}
                 </div>
             )}
 
-            <div className="mb-6">
-                <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(event) =>
-                        setSearchTerm(event.target.value)
-                    }
-                    placeholder="Search by shift or role..."
-                    className="w-full max-w-md rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-gray-500 focus:ring-1 focus:ring-gray-500"
-                />
-            </div>
+            {success && (
+                <div
+                    role="status"
+                    aria-live="polite"
+                    className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700"
+                >
+                    {success}
+                </div>
+            )}
 
-            <div className="rounded-xl bg-white p-6 shadow-sm">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="border-b text-sm text-gray-500">
-                                <th className="pb-3 pr-6 font-medium">
-                                    Shift
-                                </th>
+            <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+                <div className="flex flex-col gap-4 border-b border-gray-200 p-6 md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <h2 className="text-lg font-semibold text-gray-900">
+                            Requirements
+                        </h2>
 
-                                <th className="pb-3 pr-6 font-medium">
-                                    Role
-                                </th>
+                        <p className="mt-1 text-sm text-gray-500">
+                            {filteredRequirements.length}{' '}
+                            {filteredRequirements.length === 1
+                                ? 'requirement'
+                                : 'requirements'}
+                            {searchTerm.trim()
+                                ? ' matching your search'
+                                : ''}
+                        </p>
+                    </div>
 
-                                <th className="pb-3 pr-6 font-medium">
-                                    Required Employees
-                                </th>
+                    <div className="relative w-full md:w-72">
+                        <input
+                            type="text"
+                            value={searchTerm}
+                            onChange={(event) =>
+                                setSearchTerm(
+                                    event.target.value,
+                                )
+                            }
+                            placeholder="Search by shift or role..."
+                            aria-label="Search shift role requirements"
+                            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 pr-10 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                        />
 
-                                <th className="pb-3 font-medium">
-                                    Actions
-                                </th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            {filteredRequirements.map(
-                                (requirement) => {
-                                    const shift = shifts.find(
-                                        (item) =>
-                                            item.id ===
-                                            requirement.shiftId,
-                                    )
-
-                                    return (
-                                        <tr
-                                            key={requirement.id}
-                                            className="border-b last:border-b-0"
-                                        >
-                                            <td className="py-4 pr-6">
-                                                <div className="text-sm font-medium text-gray-900">
-                                                    Shift #
-                                                    {
-                                                        requirement.shiftId
-                                                    }
-                                                </div>
-
-                                                {shift && (
-                                                    <div className="mt-1 text-xs text-gray-500">
-                                                        {
-                                                            shift.locationName
-                                                        }{' '}
-                                                        ·{' '}
-                                                        {formatDateTime(
-                                                            shift.startTime,
-                                                        )}
-                                                    </div>
-                                                )}
-                                            </td>
-
-                                            <td className="py-4 pr-6">
-                                                <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
-                                                    {
-                                                        requirement.roleName
-                                                    }
-                                                </span>
-                                            </td>
-
-                                            <td className="py-4 pr-6 text-sm text-gray-700">
-                                                {
-                                                    requirement.requiredEmployees
-                                                }
-                                            </td>
-
-                                            <td className="py-4">
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        handleDelete(
-                                                            requirement.id,
-                                                        )
-                                                    }
-                                                    disabled={
-                                                        deletingId ===
-                                                        requirement.id
-                                                    }
-                                                    className="rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-                                                >
-                                                    {deletingId ===
-                                                        requirement.id
-                                                        ? 'Deleting...'
-                                                        : 'Delete'}
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    )
-                                },
-                            )}
-                        </tbody>
-                    </table>
+                        {searchTerm && (
+                            <button
+                                type="button"
+                                onClick={handleClearSearch}
+                                aria-label="Clear search"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-lg leading-none text-gray-400 transition hover:text-gray-700"
+                            >
+                                ×
+                            </button>
+                        )}
+                    </div>
                 </div>
 
-                {filteredRequirements.length === 0 && (
-                    <div className="py-10 text-center">
-                        <p className="text-sm text-gray-500">
-                            No shift role requirements found.
+                {filteredRequirements.length === 0 ? (
+                    <div className="px-6 py-12 text-center">
+                        <p className="text-sm font-medium text-gray-700">
+                            {requirements.length === 0
+                                ? 'No shift role requirements yet.'
+                                : 'No requirements match your search.'}
                         </p>
+
+                        <p className="mt-1 text-sm text-gray-500">
+                            {requirements.length === 0
+                                ? 'Add a requirement above to define the staffing needs of a shift.'
+                                : 'Try adjusting your search term.'}
+                        </p>
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="min-w-[850px] w-full text-left">
+                            <thead className="bg-gray-50">
+                                <tr className="border-b border-gray-200 text-sm text-gray-500">
+                                    <th className="px-6 py-3 font-medium">
+                                        Shift
+                                    </th>
+
+                                    <th className="px-6 py-3 font-medium">
+                                        Role
+                                    </th>
+
+                                    <th className="px-6 py-3 font-medium">
+                                        Required Employees
+                                    </th>
+
+                                    <th className="px-6 py-3 font-medium">
+                                        Actions
+                                    </th>
+                                </tr>
+                            </thead>
+
+                            <tbody className="divide-y divide-gray-200">
+                                {filteredRequirements.map(
+                                    (requirement) => {
+                                        const shift = shifts.find(
+                                            (item) =>
+                                                item.id ===
+                                                requirement.shiftId,
+                                        )
+
+                                        return (
+                                            <tr
+                                                key={
+                                                    requirement.id
+                                                }
+                                                className="transition hover:bg-gray-50"
+                                            >
+                                                <td className="px-6 py-4">
+                                                    <div className="text-sm font-medium text-gray-900">
+                                                        Shift #
+                                                        {
+                                                            requirement.shiftId
+                                                        }
+                                                    </div>
+
+                                                    {shift && (
+                                                        <div className="mt-1 text-xs text-gray-500">
+                                                            {
+                                                                shift.locationName
+                                                            }{' '}
+                                                            ·{' '}
+                                                            {formatDateTime(
+                                                                shift.startTime,
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </td>
+
+                                                <td className="px-6 py-4">
+                                                    <span className="inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+                                                        {
+                                                            requirement.roleName
+                                                        }
+                                                    </span>
+                                                </td>
+
+                                                <td className="px-6 py-4 text-sm text-gray-700">
+                                                    {
+                                                        requirement.requiredEmployees
+                                                    }
+                                                </td>
+
+                                                <td className="px-6 py-4">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            handleDelete(
+                                                                requirement.id,
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            isDeleting ||
+                                                            isSubmitting
+                                                        }
+                                                        className="rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                                    >
+                                                        {deletingId ===
+                                                            requirement.id
+                                                            ? 'Deleting...'
+                                                            : 'Delete'}
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        )
+                                    },
+                                )}
+                            </tbody>
+                        </table>
                     </div>
                 )}
             </div>

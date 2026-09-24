@@ -142,67 +142,88 @@ export default function LocationsPage() {
             )}
 
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                <h2 className="text-lg font-semibold text-gray-900">
-                    Add Location
-                </h2>
+                <div className="mb-5">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                        Add Location
+                    </h2>
+
+                    <p className="mt-1 text-sm text-gray-500">
+                        Add a location where employees can be scheduled.
+                    </p>
+                </div>
 
                 <form
                     onSubmit={handleSubmit}
-                    className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3"
+                    className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
                 >
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                        <label
+                            htmlFor="location-name"
+                            className="mb-1 block text-sm font-medium text-gray-700"
+                        >
                             Location Name
                         </label>
 
                         <input
+                            id="location-name"
                             type="text"
                             value={name}
                             onChange={(event) =>
                                 setName(event.target.value)
                             }
                             placeholder="e.g. Main Store"
-                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                            disabled={saving}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100"
                         />
                     </div>
 
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                        <label
+                            htmlFor="location-address"
+                            className="mb-1 block text-sm font-medium text-gray-700"
+                        >
                             Address
                         </label>
 
                         <input
+                            id="location-address"
                             type="text"
                             value={address}
                             onChange={(event) =>
                                 setAddress(event.target.value)
                             }
                             placeholder="e.g. Main Street 10"
-                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                            disabled={saving}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100"
                         />
                     </div>
 
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                        <label
+                            htmlFor="location-city"
+                            className="mb-1 block text-sm font-medium text-gray-700"
+                        >
                             City
                         </label>
 
                         <input
+                            id="location-city"
                             type="text"
                             value={city}
                             onChange={(event) =>
                                 setCity(event.target.value)
                             }
                             placeholder="e.g. Târgu Mureș"
-                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                            disabled={saving}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100"
                         />
                     </div>
 
-                    <div className="md:col-span-3">
+                    <div className="md:col-span-2 lg:col-span-3">
                         <button
                             type="submit"
                             disabled={saving}
-                            className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="w-full rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                         >
                             {saving
                                 ? 'Saving...'
@@ -221,35 +242,63 @@ export default function LocationsPage() {
 
                         <p className="mt-1 text-sm text-gray-500">
                             {filteredLocations.length}{' '}
-                            location
-                            {filteredLocations.length !== 1
-                                ? 's'
+                            {filteredLocations.length === 1
+                                ? 'location'
+                                : 'locations'}
+                            {search.trim()
+                                ? ' matching your search'
                                 : ''}
                         </p>
                     </div>
 
-                    <input
-                        type="text"
-                        value={search}
-                        onChange={(event) =>
-                            setSearch(event.target.value)
-                        }
-                        placeholder="Search location..."
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none md:w-64"
-                    />
+                    <div className="relative w-full md:w-64">
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(event) =>
+                                setSearch(event.target.value)
+                            }
+                            placeholder="Search location..."
+                            aria-label="Search locations"
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-100"
+                        />
+
+                        {search && (
+                            <button
+                                type="button"
+                                onClick={() => setSearch('')}
+                                aria-label="Clear search"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-lg leading-none text-gray-400 transition hover:text-gray-700"
+                            >
+                                ×
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {loading ? (
-                    <div className="p-6 text-sm text-gray-500">
-                        Loading locations...
+                    <div className="flex items-center justify-center p-10">
+                        <p className="text-sm text-gray-500">
+                            Loading locations...
+                        </p>
                     </div>
                 ) : filteredLocations.length === 0 ? (
-                    <div className="p-6 text-sm text-gray-500">
-                        No locations found.
+                    <div className="p-10 text-center">
+                        <p className="text-sm font-medium text-gray-700">
+                            {locations.length === 0
+                                ? 'No locations yet.'
+                                : 'No locations match your search.'}
+                        </p>
+
+                        <p className="mt-1 text-sm text-gray-500">
+                            {locations.length === 0
+                                ? 'Add a location above to get started.'
+                                : 'Try adjusting your search term.'}
+                        </p>
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
+                        <table className="min-w-[700px] w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
@@ -275,19 +324,20 @@ export default function LocationsPage() {
                                     (location) => (
                                         <tr
                                             key={location.id}
+                                            className="transition hover:bg-gray-50"
                                         >
                                             <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
                                                 {location.name}
                                             </td>
 
-                                            <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
+                                            <td className="px-6 py-4 text-sm text-gray-700">
                                                 {location.address ??
-                                                    '-'}
+                                                    '—'}
                                             </td>
 
                                             <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
                                                 {location.city ??
-                                                    '-'}
+                                                    '—'}
                                             </td>
 
                                             <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-500">

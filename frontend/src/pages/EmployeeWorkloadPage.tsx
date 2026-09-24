@@ -7,6 +7,7 @@ import { getApiErrorMessage } from '../services/apiError'
 
 function EmployeeWorkloadPage() {
     const [employees, setEmployees] = useState<Employee[]>([])
+
     const [selectedEmployeeId, setSelectedEmployeeId] =
         useState<number | ''>('')
 
@@ -52,7 +53,6 @@ function EmployeeWorkloadPage() {
             setIsLoadingWorkload(true)
 
             const data = await getEmployeeWorkload(employeeId)
-
             setWorkload(data)
         } catch (err) {
             setError(getApiErrorMessage(err))
@@ -61,12 +61,24 @@ function EmployeeWorkloadPage() {
         }
     }
 
+    const activeEmployees = employees.filter(
+        (employee) => employee.isActive,
+    )
+
     if (isLoading) {
         return (
             <div className="flex items-center justify-center py-20">
-                <p className="text-gray-500">
+                <p className="text-sm text-gray-500">
                     Loading employees...
                 </p>
+            </div>
+        )
+    }
+
+    if (error && employees.length === 0) {
+        return (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
             </div>
         )
     }
@@ -83,33 +95,55 @@ function EmployeeWorkloadPage() {
                 </p>
             </div>
 
+            {error && (
+                <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {error}
+                </div>
+            )}
+
             <div className="mb-8 rounded-xl bg-white p-6 shadow-sm">
-                <label
-                    htmlFor="employee"
-                    className="mb-2 block text-sm font-medium text-gray-700"
-                >
-                    Select Employee
-                </label>
+                <div className="mb-4">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                        Select Employee
+                    </h2>
 
-                <select
-                    id="employee"
-                    value={selectedEmployeeId}
-                    onChange={(event) =>
-                        handleEmployeeChange(
-                            event.target.value === ''
-                                ? ''
-                                : Number(event.target.value),
-                        )
-                    }
-                    className="w-full max-w-md rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none focus:border-gray-500 focus:ring-1 focus:ring-gray-500"
-                >
-                    <option value="">
-                        Select employee
-                    </option>
+                    <p className="mt-1 text-sm text-gray-500">
+                        Choose an active employee to view their current
+                        workload.
+                    </p>
+                </div>
 
-                    {employees
-                        .filter((employee) => employee.isActive)
-                        .map((employee) => (
+                {activeEmployees.length === 0 ? (
+                    <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-4">
+                        <p className="text-sm font-medium text-gray-700">
+                            No active employees available.
+                        </p>
+
+                        <p className="mt-1 text-sm text-gray-500">
+                            Add or activate an employee to view workload
+                            information.
+                        </p>
+                    </div>
+                ) : (
+                    <select
+                        id="employee"
+                        value={selectedEmployeeId}
+                        onChange={(event) =>
+                            handleEmployeeChange(
+                                event.target.value === ''
+                                    ? ''
+                                    : Number(event.target.value),
+                            )
+                        }
+                        disabled={isLoadingWorkload}
+                        aria-label="Select employee"
+                        className="w-full max-w-md rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-gray-500 focus:ring-1 focus:ring-gray-500 disabled:cursor-not-allowed disabled:bg-gray-100"
+                    >
+                        <option value="">
+                            Select employee
+                        </option>
+
+                        {activeEmployees.map((employee) => (
                             <option
                                 key={employee.id}
                                 value={employee.id}
@@ -118,14 +152,9 @@ function EmployeeWorkloadPage() {
                                 {employee.lastName}
                             </option>
                         ))}
-                </select>
+                    </select>
+                )}
             </div>
-
-            {error && (
-                <div className="mb-6 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
-                    {error}
-                </div>
-            )}
 
             {isLoadingWorkload && (
                 <div className="rounded-xl bg-white p-10 text-center shadow-sm">
@@ -147,9 +176,9 @@ function EmployeeWorkloadPage() {
                         </p>
                     </div>
 
-                    <div className="grid gap-6 md:grid-cols-2">
-                        <div className="rounded-xl bg-white p-6 shadow-sm">
-                            <p className="text-sm text-gray-500">
+                    <div className="grid gap-6 sm:grid-cols-2">
+                        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md">
+                            <p className="text-sm font-medium text-gray-500">
                                 Assigned Shifts
                             </p>
 
@@ -165,8 +194,8 @@ function EmployeeWorkloadPage() {
                             </p>
                         </div>
 
-                        <div className="rounded-xl bg-white p-6 shadow-sm">
-                            <p className="text-sm text-gray-500">
+                        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md">
+                            <p className="text-sm font-medium text-gray-500">
                                 Scheduled Hours
                             </p>
 
@@ -186,10 +215,17 @@ function EmployeeWorkloadPage() {
             )}
 
             {!isLoadingWorkload &&
-                selectedEmployeeId === '' && (
-                    <div className="rounded-xl bg-white p-10 text-center shadow-sm">
-                        <p className="text-sm text-gray-500">
+                workload === null &&
+                selectedEmployeeId === '' &&
+                activeEmployees.length > 0 && (
+                    <div className="rounded-xl border border-gray-200 bg-white p-10 text-center shadow-sm">
+                        <p className="text-sm font-medium text-gray-700">
                             Select an employee to view their workload.
+                        </p>
+
+                        <p className="mt-1 text-sm text-gray-500">
+                            The assigned shift count and scheduled hours
+                            will appear here.
                         </p>
                     </div>
                 )}

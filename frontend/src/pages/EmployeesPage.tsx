@@ -14,7 +14,6 @@ import {
 import { getDepartments } from '../services/departmentService'
 import { getApiErrorMessage } from '../services/apiError'
 
-
 interface EmployeeFormData {
     firstName: string
     lastName: string
@@ -51,6 +50,7 @@ function EmployeesPage() {
 
     const [error, setError] = useState('')
     const [formError, setFormError] = useState('')
+    const [success, setSuccess] = useState('')
 
     const [formData, setFormData] =
         useState<EmployeeFormData>(getDefaultFormData())
@@ -84,7 +84,6 @@ function EmployeesPage() {
             `${employee.firstName} ${employee.lastName}`.toLowerCase()
 
         const email = employee.email.toLowerCase()
-
         const search = searchTerm.toLowerCase().trim()
 
         return (
@@ -119,20 +118,22 @@ function EmployeesPage() {
     ) => {
         event.preventDefault()
 
+        setFormError('')
+        setSuccess('')
+
+        if (formData.departmentId === 0) {
+            setFormError('Please select a department.')
+            return
+        }
+
         try {
             setIsSubmitting(true)
-            setFormError('')
-
-            if (formData.departmentId === 0) {
-                setFormError('Please select a department.')
-                return
-            }
 
             const request: CreateEmployeeRequest = {
-                firstName: formData.firstName,
-                lastName: formData.lastName,
-                email: formData.email,
-                phone: formData.phone,
+                firstName: formData.firstName.trim(),
+                lastName: formData.lastName.trim(),
+                email: formData.email.trim(),
+                phone: formData.phone.trim(),
                 departmentId: formData.departmentId,
                 hireDate: formData.hireDate,
             }
@@ -144,6 +145,8 @@ function EmployeesPage() {
 
             resetForm()
             setShowForm(false)
+
+            setSuccess('Employee created successfully.')
         } catch (error) {
             setFormError(getApiErrorMessage(error))
         } finally {
@@ -160,20 +163,22 @@ function EmployeesPage() {
             return
         }
 
+        setFormError('')
+        setSuccess('')
+
+        if (formData.departmentId === 0) {
+            setFormError('Please select a department.')
+            return
+        }
+
         try {
             setIsSubmitting(true)
-            setFormError('')
-
-            if (formData.departmentId === 0) {
-                setFormError('Please select a department.')
-                return
-            }
 
             const request: UpdateEmployeeRequest = {
-                firstName: formData.firstName,
-                lastName: formData.lastName,
-                email: formData.email,
-                phone: formData.phone,
+                firstName: formData.firstName.trim(),
+                lastName: formData.lastName.trim(),
+                email: formData.email.trim(),
+                phone: formData.phone.trim(),
                 departmentId: formData.departmentId,
                 hireDate: formData.hireDate,
                 isActive: formData.isActive,
@@ -189,6 +194,8 @@ function EmployeesPage() {
 
             resetForm()
             setShowForm(false)
+
+            setSuccess('Employee updated successfully.')
         } catch (error) {
             setFormError(getApiErrorMessage(error))
         } finally {
@@ -208,6 +215,8 @@ function EmployeesPage() {
 
     const handleAddEmployee = () => {
         resetForm()
+        setFormError('')
+        setSuccess('')
         setShowForm(true)
     }
 
@@ -225,6 +234,7 @@ function EmployeesPage() {
         })
 
         setFormError('')
+        setSuccess('')
         setShowForm(true)
     }
 
@@ -245,7 +255,7 @@ function EmployeesPage() {
 
     if (error) {
         return (
-            <div className="rounded-lg bg-red-50 px-4 py-3 text-red-600">
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {error}
             </div>
         )
@@ -253,7 +263,7 @@ function EmployeesPage() {
 
     return (
         <div>
-            <div className="mb-8 flex items-start justify-between">
+            <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">
                         Employees
@@ -267,11 +277,17 @@ function EmployeesPage() {
                 <button
                     type="button"
                     onClick={handleAddEmployee}
-                    className="rounded-lg bg-gray-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-gray-700"
+                    className="w-full rounded-lg bg-gray-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-gray-700 sm:w-auto"
                 >
                     + Add Employee
                 </button>
             </div>
+
+            {success && (
+                <div className="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+                    {success}
+                </div>
+            )}
 
             {showForm && (
                 <div className="mb-8 rounded-xl bg-white p-6 shadow-sm">
@@ -290,7 +306,7 @@ function EmployeesPage() {
                     </div>
 
                     {formError && (
-                        <div className="mb-6 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
+                        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                             {formError}
                         </div>
                     )}
@@ -317,8 +333,9 @@ function EmployeesPage() {
                                         event.target.value,
                                     )
                                 }
+                                disabled={isSubmitting}
                                 required
-                                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-gray-500 focus:ring-1 focus:ring-gray-500"
+                                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-gray-500 focus:ring-1 focus:ring-gray-500 disabled:cursor-not-allowed disabled:bg-gray-100"
                             />
                         </div>
 
@@ -340,8 +357,9 @@ function EmployeesPage() {
                                         event.target.value,
                                     )
                                 }
+                                disabled={isSubmitting}
                                 required
-                                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-gray-500 focus:ring-1 focus:ring-gray-500"
+                                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-gray-500 focus:ring-1 focus:ring-gray-500 disabled:cursor-not-allowed disabled:bg-gray-100"
                             />
                         </div>
 
@@ -363,8 +381,9 @@ function EmployeesPage() {
                                         event.target.value,
                                     )
                                 }
+                                disabled={isSubmitting}
                                 required
-                                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-gray-500 focus:ring-1 focus:ring-gray-500"
+                                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-gray-500 focus:ring-1 focus:ring-gray-500 disabled:cursor-not-allowed disabled:bg-gray-100"
                             />
                         </div>
 
@@ -386,7 +405,8 @@ function EmployeesPage() {
                                         event.target.value,
                                     )
                                 }
-                                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-gray-500 focus:ring-1 focus:ring-gray-500"
+                                disabled={isSubmitting}
+                                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-gray-500 focus:ring-1 focus:ring-gray-500 disabled:cursor-not-allowed disabled:bg-gray-100"
                             />
                         </div>
 
@@ -407,8 +427,9 @@ function EmployeesPage() {
                                         event.target.value,
                                     )
                                 }
+                                disabled={isSubmitting}
                                 required
-                                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none focus:border-gray-500 focus:ring-1 focus:ring-gray-500"
+                                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-gray-500 focus:ring-1 focus:ring-gray-500 disabled:cursor-not-allowed disabled:bg-gray-100"
                             >
                                 <option value={0}>
                                     Select department
@@ -443,8 +464,9 @@ function EmployeesPage() {
                                         event.target.value,
                                     )
                                 }
+                                disabled={isSubmitting}
                                 required
-                                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-gray-500 focus:ring-1 focus:ring-gray-500"
+                                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-gray-500 focus:ring-1 focus:ring-gray-500 disabled:cursor-not-allowed disabled:bg-gray-100"
                             />
                         </div>
 
@@ -470,11 +492,13 @@ function EmployeesPage() {
                                             event.target.value,
                                         )
                                     }
-                                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none focus:border-gray-500 focus:ring-1 focus:ring-gray-500"
+                                    disabled={isSubmitting}
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-gray-500 focus:ring-1 focus:ring-gray-500 disabled:cursor-not-allowed disabled:bg-gray-100"
                                 >
                                     <option value="true">
                                         Active
                                     </option>
+
                                     <option value="false">
                                         Inactive
                                     </option>
@@ -482,11 +506,12 @@ function EmployeesPage() {
                             </div>
                         )}
 
-                        <div className="flex gap-3 md:col-span-2">
+                        <div className="flex flex-col gap-3 sm:flex-row md:col-span-2">
                             <button
                                 type="button"
                                 onClick={handleCancel}
-                                className="rounded-lg border border-gray-300 px-5 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+                                disabled={isSubmitting}
+                                className="rounded-lg border border-gray-300 px-5 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 Cancel
                             </button>
@@ -509,115 +534,153 @@ function EmployeesPage() {
                 </div>
             )}
 
-            <div className="mb-6">
-                <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(event) =>
-                        setSearchTerm(event.target.value)
-                    }
-                    placeholder="Search employees..."
-                    className="w-full max-w-md rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-gray-500 focus:ring-1 focus:ring-gray-500"
-                />
+            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <p className="text-sm text-gray-500">
+                        {filteredEmployees.length}{' '}
+                        {filteredEmployees.length === 1
+                            ? 'employee'
+                            : 'employees'}
+                        {searchTerm.trim()
+                            ? ' matching your search'
+                            : ''}
+                    </p>
+                </div>
+
+                <div className="relative w-full sm:w-80">
+                    <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(event) =>
+                            setSearchTerm(event.target.value)
+                        }
+                        placeholder="Search by name or email..."
+                        aria-label="Search employees"
+                        className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 pr-10 text-sm outline-none transition focus:border-gray-500 focus:ring-1 focus:ring-gray-500"
+                    />
+
+                    {searchTerm && (
+                        <button
+                            type="button"
+                            onClick={() => setSearchTerm('')}
+                            aria-label="Clear search"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-lg leading-none text-gray-400 transition hover:text-gray-700"
+                        >
+                            ×
+                        </button>
+                    )}
+                </div>
             </div>
 
             <div className="rounded-xl bg-white p-6 shadow-sm">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="border-b text-sm text-gray-500">
-                                <th className="pb-3 pr-6 font-medium">
-                                    Name
-                                </th>
-
-                                <th className="pb-3 pr-6 font-medium">
-                                    Email
-                                </th>
-
-                                <th className="pb-3 pr-6 font-medium">
-                                    Phone
-                                </th>
-
-                                <th className="pb-3 pr-6 font-medium">
-                                    Hire Date
-                                </th>
-
-                                <th className="pb-3 pr-6 font-medium">
-                                    Status
-                                </th>
-
-                                <th className="pb-3 font-medium">
-                                    Actions
-                                </th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            {filteredEmployees.map((employee) => (
-                                <tr
-                                    key={employee.id}
-                                    className="border-b last:border-b-0"
-                                >
-                                    <td className="py-4 pr-6 text-sm font-medium text-gray-900">
-                                        {employee.firstName}{' '}
-                                        {employee.lastName}
-                                    </td>
-
-                                    <td className="py-4 pr-6 text-sm text-gray-700">
-                                        {employee.email}
-                                    </td>
-
-                                    <td className="py-4 pr-6 text-sm text-gray-700">
-                                        {employee.phone ?? '—'}
-                                    </td>
-
-                                    <td className="py-4 pr-6 text-sm text-gray-700">
-                                        {new Date(
-                                            employee.hireDate,
-                                        ).toLocaleDateString('en-US', {
-                                            month: 'short',
-                                            day: 'numeric',
-                                            year: 'numeric',
-                                        })}
-                                    </td>
-
-                                    <td className="py-4 pr-6 text-sm">
-                                        <span
-                                            className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${employee.isActive
-                                                    ? 'bg-green-50 text-green-700'
-                                                    : 'bg-gray-100 text-gray-600'
-                                                }`}
-                                        >
-                                            {employee.isActive
-                                                ? 'Active'
-                                                : 'Inactive'}
-                                        </span>
-                                    </td>
-
-                                    <td className="py-4 text-sm">
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                handleEditEmployee(
-                                                    employee,
-                                                )
-                                            }
-                                            className="font-medium text-gray-700 transition hover:text-gray-900"
-                                        >
-                                            Edit
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                {filteredEmployees.length === 0 && (
+                {filteredEmployees.length === 0 ? (
                     <div className="py-10 text-center">
-                        <p className="text-sm text-gray-500">
-                            No employees found.
+                        <p className="text-sm font-medium text-gray-700">
+                            {employees.length === 0
+                                ? 'No employees yet.'
+                                : 'No employees match your search.'}
                         </p>
+
+                        <p className="mt-1 text-sm text-gray-500">
+                            {employees.length === 0
+                                ? 'Add an employee above to get started.'
+                                : 'Try adjusting your search term.'}
+                        </p>
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="min-w-[900px] w-full text-left">
+                            <thead>
+                                <tr className="border-b text-sm text-gray-500">
+                                    <th className="pb-3 pr-6 font-medium">
+                                        Name
+                                    </th>
+
+                                    <th className="pb-3 pr-6 font-medium">
+                                        Email
+                                    </th>
+
+                                    <th className="pb-3 pr-6 font-medium">
+                                        Phone
+                                    </th>
+
+                                    <th className="pb-3 pr-6 font-medium">
+                                        Hire Date
+                                    </th>
+
+                                    <th className="pb-3 pr-6 font-medium">
+                                        Status
+                                    </th>
+
+                                    <th className="pb-3 font-medium">
+                                        Actions
+                                    </th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {filteredEmployees.map((employee) => (
+                                    <tr
+                                        key={employee.id}
+                                        className="border-b transition hover:bg-gray-50 last:border-b-0"
+                                    >
+                                        <td className="py-4 pr-6 text-sm font-medium text-gray-900">
+                                            {employee.firstName}{' '}
+                                            {employee.lastName}
+                                        </td>
+
+                                        <td className="py-4 pr-6 text-sm text-gray-700">
+                                            {employee.email}
+                                        </td>
+
+                                        <td className="py-4 pr-6 text-sm text-gray-700">
+                                            {employee.phone ?? '—'}
+                                        </td>
+
+                                        <td className="py-4 pr-6 text-sm text-gray-700">
+                                            {new Date(
+                                                employee.hireDate,
+                                            ).toLocaleDateString(
+                                                'en-US',
+                                                {
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    year: 'numeric',
+                                                },
+                                            )}
+                                        </td>
+
+                                        <td className="py-4 pr-6 text-sm">
+                                            <span
+                                                className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${employee.isActive
+                                                        ? 'bg-green-50 text-green-700'
+                                                        : 'bg-gray-100 text-gray-600'
+                                                    }`}
+                                            >
+                                                {employee.isActive
+                                                    ? 'Active'
+                                                    : 'Inactive'}
+                                            </span>
+                                        </td>
+
+                                        <td className="py-4 text-sm">
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    handleEditEmployee(
+                                                        employee,
+                                                    )
+                                                }
+                                                disabled={isSubmitting}
+                                                className="font-medium text-gray-700 transition hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                Edit
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 )}
             </div>

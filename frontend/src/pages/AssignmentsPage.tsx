@@ -1,13 +1,18 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import type { ShiftAssignment, AssignEmployeeToShiftRequest } from '../types/shiftAssignment'
+import type {
+    ShiftAssignment,
+    AssignEmployeeToShiftRequest,
+} from '../types/shiftAssignment'
 import type { Employee } from '../types/employee'
 import type { Shift } from '../types/shift'
-import { getShiftAssignments, assignEmployeeToShift } from '../services/shiftAssignmentService'
+import {
+    getShiftAssignments,
+    assignEmployeeToShift,
+} from '../services/shiftAssignmentService'
 import { getEmployees } from '../services/employeeService'
 import { getShifts } from '../services/shiftService'
 import { getApiErrorMessage } from '../services/apiError'
-
 
 interface AssignmentFormData {
     shiftId: number
@@ -45,6 +50,7 @@ function AssignmentsPage() {
 
     const [error, setError] = useState('')
     const [formError, setFormError] = useState('')
+    const [success, setSuccess] = useState('')
 
     const [formData, setFormData] =
         useState<AssignmentFormData>(getDefaultFormData())
@@ -110,6 +116,7 @@ function AssignmentsPage() {
         event.preventDefault()
 
         setFormError('')
+        setSuccess('')
 
         if (formData.shiftId === 0) {
             setFormError('Please select a shift.')
@@ -138,6 +145,7 @@ function AssignmentsPage() {
 
             setFormData(getDefaultFormData())
             setShowForm(false)
+            setSuccess('Employee assigned successfully.')
         } catch (error) {
             setFormError(getApiErrorMessage(error))
         } finally {
@@ -171,7 +179,7 @@ function AssignmentsPage() {
 
     return (
         <div>
-            <div className="mb-8 flex items-start justify-between">
+            <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">
                         Assignments
@@ -187,13 +195,20 @@ function AssignmentsPage() {
                     onClick={() => {
                         setFormData(getDefaultFormData())
                         setFormError('')
+                        setSuccess('')
                         setShowForm(true)
                     }}
-                    className="rounded-lg bg-gray-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-gray-700"
+                    className="w-full rounded-lg bg-gray-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-gray-700 sm:w-auto"
                 >
                     + Assign Employee
                 </button>
             </div>
+
+            {success && (
+                <div className="mb-6 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700">
+                    {success}
+                </div>
+            )}
 
             {showForm && (
                 <div className="mb-8 rounded-xl bg-white p-6 shadow-sm">
@@ -234,8 +249,9 @@ function AssignmentsPage() {
                                         event.target.value,
                                     )
                                 }
+                                disabled={isSubmitting}
                                 required
-                                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none focus:border-gray-500 focus:ring-1 focus:ring-gray-500"
+                                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none focus:border-gray-500 focus:ring-1 focus:ring-gray-500 disabled:cursor-not-allowed disabled:bg-gray-100"
                             >
                                 <option value={0}>
                                     Select shift
@@ -268,8 +284,7 @@ function AssignmentsPage() {
                                                 minute: '2-digit',
                                             },
                                         )}{' '}
-                                        -
-                                        {' '}
+                                        -{' '}
                                         {new Date(
                                             shift.endTime,
                                         ).toLocaleTimeString(
@@ -302,8 +317,9 @@ function AssignmentsPage() {
                                         event.target.value,
                                     )
                                 }
+                                disabled={isSubmitting}
                                 required
-                                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none focus:border-gray-500 focus:ring-1 focus:ring-gray-500"
+                                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none focus:border-gray-500 focus:ring-1 focus:ring-gray-500 disabled:cursor-not-allowed disabled:bg-gray-100"
                             >
                                 <option value={0}>
                                     Select employee
@@ -326,11 +342,12 @@ function AssignmentsPage() {
                             </select>
                         </div>
 
-                        <div className="flex gap-3 md:col-span-2">
+                        <div className="flex flex-col gap-3 sm:flex-row md:col-span-2">
                             <button
                                 type="button"
                                 onClick={handleCancel}
-                                className="rounded-lg border border-gray-300 px-5 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+                                disabled={isSubmitting}
+                                className="rounded-lg border border-gray-300 px-5 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 Cancel
                             </button>
@@ -476,9 +493,17 @@ function AssignmentsPage() {
                 </div>
 
                 {filteredAssignments.length === 0 && (
-                    <div className="py-10 text-center">
-                        <p className="text-sm text-gray-500">
-                            No assignments found.
+                    <div className="py-12 text-center">
+                        <p className="text-sm font-medium text-gray-700">
+                            {assignments.length === 0
+                                ? 'No assignments yet.'
+                                : 'No assignments match your search.'}
+                        </p>
+
+                        <p className="mt-1 text-sm text-gray-500">
+                            {assignments.length === 0
+                                ? 'Assign an employee to a shift to see assignments here.'
+                                : 'Try adjusting your search term.'}
                         </p>
                     </div>
                 )}

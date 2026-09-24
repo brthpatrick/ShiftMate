@@ -9,7 +9,6 @@ import type { Availability } from '../types/availability'
 import type { Employee } from '../types/employee'
 import { getApiErrorMessage } from '../services/apiError'
 
-
 const daysOfWeek = [
     { value: 0, label: 'Sunday' },
     { value: 1, label: 'Monday' },
@@ -140,7 +139,9 @@ export default function AvailabilityPage() {
             await deleteAvailability(id)
 
             setAvailabilities((current) =>
-                current.filter((availability) => availability.id !== id),
+                current.filter(
+                    (availability) => availability.id !== id,
+                ),
             )
 
             setSuccess('Availability deleted successfully.')
@@ -157,6 +158,7 @@ export default function AvailabilityPage() {
                 <h1 className="text-2xl font-semibold text-gray-900">
                     Availability
                 </h1>
+
                 <p className="mt-1 text-sm text-gray-500">
                     Manage employee availability for shift scheduling.
                 </p>
@@ -175,27 +177,41 @@ export default function AvailabilityPage() {
             )}
 
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                <h2 className="text-lg font-semibold text-gray-900">
-                    Add Availability
-                </h2>
+                <div className="mb-5">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                        Add Availability
+                    </h2>
+
+                    <p className="mt-1 text-sm text-gray-500">
+                        Define when an employee is available or unavailable
+                        for scheduling.
+                    </p>
+                </div>
 
                 <form
                     onSubmit={handleCreate}
-                    className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
+                    className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
                 >
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                        <label
+                            htmlFor="availability-employee"
+                            className="mb-1 block text-sm font-medium text-gray-700"
+                        >
                             Employee
                         </label>
 
                         <select
+                            id="availability-employee"
                             value={selectedEmployeeId}
                             onChange={(event) =>
                                 setSelectedEmployeeId(event.target.value)
                             }
-                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                            disabled={saving}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100"
                         >
-                            <option value="">Select employee</option>
+                            <option value="">
+                                Select employee
+                            </option>
 
                             {employees
                                 .filter((employee) => employee.isActive)
@@ -212,16 +228,21 @@ export default function AvailabilityPage() {
                     </div>
 
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                        <label
+                            htmlFor="availability-day"
+                            className="mb-1 block text-sm font-medium text-gray-700"
+                        >
                             Day
                         </label>
 
                         <select
+                            id="availability-day"
                             value={dayOfWeek}
                             onChange={(event) =>
                                 setDayOfWeek(event.target.value)
                             }
-                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                            disabled={saving}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100"
                         >
                             {daysOfWeek.map((day) => (
                                 <option
@@ -235,61 +256,83 @@ export default function AvailabilityPage() {
                     </div>
 
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                        <label
+                            htmlFor="availability-status"
+                            className="mb-1 block text-sm font-medium text-gray-700"
+                        >
                             Availability
                         </label>
 
                         <select
+                            id="availability-status"
                             value={isAvailable ? 'true' : 'false'}
                             onChange={(event) =>
                                 setIsAvailable(
                                     event.target.value === 'true',
                                 )
                             }
-                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                            disabled={saving}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100"
                         >
-                            <option value="true">Available</option>
-                            <option value="false">Unavailable</option>
+                            <option value="true">
+                                Available
+                            </option>
+
+                            <option value="false">
+                                Unavailable
+                            </option>
                         </select>
                     </div>
 
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                        <label
+                            htmlFor="availability-start"
+                            className="mb-1 block text-sm font-medium text-gray-700"
+                        >
                             Start Time
                         </label>
 
                         <input
+                            id="availability-start"
                             type="time"
                             value={startTime}
                             onChange={(event) =>
                                 setStartTime(event.target.value)
                             }
-                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                            disabled={saving}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100"
                         />
                     </div>
 
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                        <label
+                            htmlFor="availability-end"
+                            className="mb-1 block text-sm font-medium text-gray-700"
+                        >
                             End Time
                         </label>
 
                         <input
+                            id="availability-end"
                             type="time"
                             value={endTime}
                             onChange={(event) =>
                                 setEndTime(event.target.value)
                             }
-                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                            disabled={saving}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100"
                         />
                     </div>
 
-                    <div className="flex items-end">
+                    <div className="flex items-end md:col-span-2 lg:col-span-1">
                         <button
                             type="submit"
                             disabled={saving}
                             className="w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                            {saving ? 'Saving...' : 'Add Availability'}
+                            {saving
+                                ? 'Saving...'
+                                : 'Add Availability'}
                         </button>
                     </div>
                 </form>
@@ -301,52 +344,87 @@ export default function AvailabilityPage() {
                         <h2 className="text-lg font-semibold text-gray-900">
                             Employee Availability
                         </h2>
+
                         <p className="mt-1 text-sm text-gray-500">
-                            {filteredAvailabilities.length} availability
-                            record
-                            {filteredAvailabilities.length !== 1
-                                ? 's'
+                            {filteredAvailabilities.length}{' '}
+                            {filteredAvailabilities.length === 1
+                                ? 'availability record'
+                                : 'availability records'}
+                            {search.trim()
+                                ? ' matching your search'
                                 : ''}
                         </p>
                     </div>
 
-                    <input
-                        type="text"
-                        value={search}
-                        onChange={(event) => setSearch(event.target.value)}
-                        placeholder="Search employee..."
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none md:w-64"
-                    />
+                    <div className="relative w-full md:w-64">
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(event) =>
+                                setSearch(event.target.value)
+                            }
+                            placeholder="Search employee..."
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-100"
+                        />
+
+                        {search && (
+                            <button
+                                type="button"
+                                onClick={() => setSearch('')}
+                                aria-label="Clear search"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition hover:text-gray-700"
+                            >
+                                ×
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {loading ? (
-                    <div className="p-6 text-sm text-gray-500">
-                        Loading availability...
+                    <div className="flex items-center justify-center p-10">
+                        <p className="text-sm text-gray-500">
+                            Loading availability...
+                        </p>
                     </div>
                 ) : filteredAvailabilities.length === 0 ? (
-                    <div className="p-6 text-sm text-gray-500">
-                        No availability records found.
+                    <div className="p-10 text-center">
+                        <p className="text-sm font-medium text-gray-700">
+                            {availabilities.length === 0
+                                ? 'No availability records yet.'
+                                : 'No availability records match your search.'}
+                        </p>
+
+                        <p className="mt-1 text-sm text-gray-500">
+                            {availabilities.length === 0
+                                ? 'Add an availability record above to get started.'
+                                : 'Try adjusting your search term.'}
+                        </p>
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
+                        <table className="min-w-[800px] divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                                         Employee
                                     </th>
+
                                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                                         Day
                                     </th>
+
                                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                                         Start
                                     </th>
+
                                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                                         End
                                     </th>
+
                                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                                         Status
                                     </th>
+
                                     <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
                                         Action
                                     </th>
@@ -356,7 +434,10 @@ export default function AvailabilityPage() {
                             <tbody className="divide-y divide-gray-200 bg-white">
                                 {filteredAvailabilities.map(
                                     (availability) => (
-                                        <tr key={availability.id}>
+                                        <tr
+                                            key={availability.id}
+                                            className="transition hover:bg-gray-50"
+                                        >
                                             <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
                                                 {
                                                     availability.employeeName
@@ -380,8 +461,8 @@ export default function AvailabilityPage() {
                                             <td className="whitespace-nowrap px-6 py-4 text-sm">
                                                 <span
                                                     className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${availability.isAvailable
-                                                        ? 'bg-green-100 text-green-700'
-                                                        : 'bg-gray-100 text-gray-700'
+                                                            ? 'bg-green-100 text-green-700'
+                                                            : 'bg-gray-100 text-gray-700'
                                                         }`}
                                                 >
                                                     {availability.isAvailable
@@ -402,7 +483,7 @@ export default function AvailabilityPage() {
                                                         deletingId ===
                                                         availability.id
                                                     }
-                                                    className="font-medium text-red-600 hover:text-red-800 disabled:cursor-not-allowed disabled:opacity-50"
+                                                    className="font-medium text-red-600 transition hover:text-red-800 disabled:cursor-not-allowed disabled:opacity-50"
                                                 >
                                                     {deletingId ===
                                                         availability.id

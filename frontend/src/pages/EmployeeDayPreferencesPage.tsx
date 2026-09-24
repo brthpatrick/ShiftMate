@@ -80,7 +80,9 @@ export default function EmployeeDayPreferencesPage() {
         }
 
         return preferences.filter((preference) =>
-            preference.employeeName.toLowerCase().includes(searchTerm),
+            preference.employeeName
+                .toLowerCase()
+                .includes(searchTerm),
         )
     }, [preferences, search])
 
@@ -176,7 +178,9 @@ export default function EmployeeDayPreferencesPage() {
             await deleteEmployeeDayPreference(id)
 
             setPreferences((current) =>
-                current.filter((preference) => preference.id !== id),
+                current.filter(
+                    (preference) => preference.id !== id,
+                ),
             )
 
             setSuccess(
@@ -214,27 +218,40 @@ export default function EmployeeDayPreferencesPage() {
             )}
 
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                <h2 className="text-lg font-semibold text-gray-900">
-                    Add Employee Day Preference
-                </h2>
+                <div className="mb-5">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                        Add Employee Day Preference
+                    </h2>
+
+                    <p className="mt-1 text-sm text-gray-500">
+                        Set a preferred or unavailable day for an employee.
+                    </p>
+                </div>
 
                 <form
                     onSubmit={handleSubmit}
-                    className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-4"
+                    className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4"
                 >
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                        <label
+                            htmlFor="employee-day-preference-employee"
+                            className="mb-1 block text-sm font-medium text-gray-700"
+                        >
                             Employee
                         </label>
 
                         <select
+                            id="employee-day-preference-employee"
                             value={selectedEmployeeId}
                             onChange={(event) =>
                                 setSelectedEmployeeId(event.target.value)
                             }
-                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                            disabled={saving}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100"
                         >
-                            <option value="">Select employee</option>
+                            <option value="">
+                                Select employee
+                            </option>
 
                             {availableEmployees.map((employee) => (
                                 <option
@@ -249,18 +266,25 @@ export default function EmployeeDayPreferencesPage() {
                     </div>
 
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                        <label
+                            htmlFor="employee-day-preference-day"
+                            className="mb-1 block text-sm font-medium text-gray-700"
+                        >
                             Day
                         </label>
 
                         <select
+                            id="employee-day-preference-day"
                             value={selectedDay}
                             onChange={(event) =>
                                 setSelectedDay(event.target.value)
                             }
-                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                            disabled={saving}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100"
                         >
-                            <option value="">Select day</option>
+                            <option value="">
+                                Select day
+                            </option>
 
                             {daysOfWeek.map((day) => (
                                 <option
@@ -278,14 +302,17 @@ export default function EmployeeDayPreferencesPage() {
                             <input
                                 type="checkbox"
                                 checked={isPreferred}
+                                disabled={saving}
                                 onChange={(event) => {
-                                    setIsPreferred(event.target.checked)
+                                    setIsPreferred(
+                                        event.target.checked,
+                                    )
 
                                     if (event.target.checked) {
                                         setIsUnavailable(false)
                                     }
                                 }}
-                                className="h-4 w-4 rounded border-gray-300"
+                                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
                             />
 
                             Preferred
@@ -295,14 +322,17 @@ export default function EmployeeDayPreferencesPage() {
                             <input
                                 type="checkbox"
                                 checked={isUnavailable}
+                                disabled={saving}
                                 onChange={(event) => {
-                                    setIsUnavailable(event.target.checked)
+                                    setIsUnavailable(
+                                        event.target.checked,
+                                    )
 
                                     if (event.target.checked) {
                                         setIsPreferred(false)
                                     }
                                 }}
-                                className="h-4 w-4 rounded border-gray-300"
+                                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
                             />
 
                             Unavailable
@@ -331,33 +361,64 @@ export default function EmployeeDayPreferencesPage() {
                         </h2>
 
                         <p className="mt-1 text-sm text-gray-500">
-                            {filteredPreferences.length} preference
-                            {filteredPreferences.length !== 1
-                                ? 's'
+                            {filteredPreferences.length}{' '}
+                            {filteredPreferences.length === 1
+                                ? 'preference'
+                                : 'preferences'}
+                            {search.trim()
+                                ? ' matching your search'
                                 : ''}
                         </p>
                     </div>
 
-                    <input
-                        type="text"
-                        value={search}
-                        onChange={(event) => setSearch(event.target.value)}
-                        placeholder="Search employee..."
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none md:w-64"
-                    />
+                    <div className="relative w-full md:w-64">
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(event) =>
+                                setSearch(event.target.value)
+                            }
+                            placeholder="Search employee..."
+                            aria-label="Search employee"
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-100"
+                        />
+
+                        {search && (
+                            <button
+                                type="button"
+                                onClick={() => setSearch('')}
+                                aria-label="Clear search"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-lg leading-none text-gray-400 transition hover:text-gray-700"
+                            >
+                                ×
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {loading ? (
-                    <div className="p-6 text-sm text-gray-500">
-                        Loading preferences...
+                    <div className="flex items-center justify-center p-10">
+                        <p className="text-sm text-gray-500">
+                            Loading preferences...
+                        </p>
                     </div>
                 ) : filteredPreferences.length === 0 ? (
-                    <div className="p-6 text-sm text-gray-500">
-                        No employee day preferences found.
+                    <div className="p-10 text-center">
+                        <p className="text-sm font-medium text-gray-700">
+                            {preferences.length === 0
+                                ? 'No employee day preferences yet.'
+                                : 'No preferences match your search.'}
+                        </p>
+
+                        <p className="mt-1 text-sm text-gray-500">
+                            {preferences.length === 0
+                                ? 'Add a preference above to get started.'
+                                : 'Try adjusting your search term.'}
+                        </p>
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
+                        <table className="min-w-[700px] w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
@@ -379,56 +440,63 @@ export default function EmployeeDayPreferencesPage() {
                             </thead>
 
                             <tbody className="divide-y divide-gray-200 bg-white">
-                                {filteredPreferences.map((preference) => (
-                                    <tr key={preference.id}>
-                                        <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
-                                            {preference.employeeName}
-                                        </td>
-
-                                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
-                                            {getDayName(
-                                                preference.dayOfWeek,
-                                            )}
-                                        </td>
-
-                                        <td className="whitespace-nowrap px-6 py-4 text-sm">
-                                            {preference.isUnavailable ? (
-                                                <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700">
-                                                    Unavailable
-                                                </span>
-                                            ) : preference.isPreferred ? (
-                                                <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
-                                                    Preferred
-                                                </span>
-                                            ) : (
-                                                <span className="text-gray-500">
-                                                    None
-                                                </span>
-                                            )}
-                                        </td>
-
-                                        <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    handleDelete(
-                                                        preference.id,
-                                                    )
+                                {filteredPreferences.map(
+                                    (preference) => (
+                                        <tr
+                                            key={preference.id}
+                                            className="transition hover:bg-gray-50"
+                                        >
+                                            <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
+                                                {
+                                                    preference.employeeName
                                                 }
-                                                disabled={
-                                                    deletingId ===
-                                                    preference.id
-                                                }
-                                                className="font-medium text-red-600 hover:text-red-800 disabled:cursor-not-allowed disabled:opacity-50"
-                                            >
-                                                {deletingId ===
-                                                    preference.id
-                                                    ? 'Deleting...'
-                                                    : 'Delete'}
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
+                                            </td>
+
+                                            <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
+                                                {getDayName(
+                                                    preference.dayOfWeek,
+                                                )}
+                                            </td>
+
+                                            <td className="whitespace-nowrap px-6 py-4 text-sm">
+                                                {preference.isUnavailable ? (
+                                                    <span className="inline-flex rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700">
+                                                        Unavailable
+                                                    </span>
+                                                ) : preference.isPreferred ? (
+                                                    <span className="inline-flex rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
+                                                        Preferred
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
+                                                        None
+                                                    </span>
+                                                )}
+                                            </td>
+
+                                            <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        handleDelete(
+                                                            preference.id,
+                                                        )
+                                                    }
+                                                    disabled={
+                                                        deletingId ===
+                                                        preference.id
+                                                    }
+                                                    className="font-medium text-red-600 transition hover:text-red-800 disabled:cursor-not-allowed disabled:opacity-50"
+                                                >
+                                                    {deletingId ===
+                                                        preference.id
+                                                        ? 'Deleting...'
+                                                        : 'Delete'}
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ),
+                                )}
                             </tbody>
                         </table>
                     </div>

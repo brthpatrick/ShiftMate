@@ -180,27 +180,42 @@ export default function EmployeeRolesPage() {
             )}
 
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                <h2 className="text-lg font-semibold text-gray-900">
-                    Assign Role
-                </h2>
+                <div className="mb-5">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                        Assign Role
+                    </h2>
+
+                    <p className="mt-1 text-sm text-gray-500">
+                        Assign an active employee to a role used by the
+                        scheduling system.
+                    </p>
+                </div>
 
                 <form
                     onSubmit={handleSubmit}
-                    className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3"
+                    className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
                 >
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                        <label
+                            htmlFor="employee-role-employee"
+                            className="mb-1 block text-sm font-medium text-gray-700"
+                        >
                             Employee
                         </label>
 
                         <select
+                            id="employee-role-employee"
                             value={selectedEmployeeId}
                             onChange={(event) =>
                                 setSelectedEmployeeId(
                                     event.target.value,
                                 )
                             }
-                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                            disabled={
+                                saving ||
+                                deletingKey !== null
+                            }
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
                         >
                             <option value="">
                                 Select employee
@@ -224,18 +239,26 @@ export default function EmployeeRolesPage() {
                     </div>
 
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                        <label
+                            htmlFor="employee-role-role"
+                            className="mb-1 block text-sm font-medium text-gray-700"
+                        >
                             Role
                         </label>
 
                         <select
+                            id="employee-role-role"
                             value={selectedRoleId}
                             onChange={(event) =>
                                 setSelectedRoleId(
                                     event.target.value,
                                 )
                             }
-                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                            disabled={
+                                saving ||
+                                deletingKey !== null
+                            }
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
                         >
                             <option value="">
                                 Select role
@@ -255,7 +278,10 @@ export default function EmployeeRolesPage() {
                     <div className="flex items-end">
                         <button
                             type="submit"
-                            disabled={saving}
+                            disabled={
+                                saving ||
+                                deletingKey !== null
+                            }
                             className="w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             {saving
@@ -274,35 +300,64 @@ export default function EmployeeRolesPage() {
                         </h2>
 
                         <p className="mt-1 text-sm text-gray-500">
-                            {filteredEmployeeRoles.length} assignment
-                            {filteredEmployeeRoles.length !== 1
-                                ? 's'
+                            {filteredEmployeeRoles.length}{' '}
+                            {filteredEmployeeRoles.length === 1
+                                ? 'assignment'
+                                : 'assignments'}
+                            {search.trim()
+                                ? ' matching your search'
                                 : ''}
                         </p>
                     </div>
 
-                    <input
-                        type="text"
-                        value={search}
-                        onChange={(event) =>
-                            setSearch(event.target.value)
-                        }
-                        placeholder="Search employee or role..."
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none md:w-72"
-                    />
+                    <div className="relative w-full md:w-72">
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(event) =>
+                                setSearch(event.target.value)
+                            }
+                            placeholder="Search employee or role..."
+                            aria-label="Search employee or role"
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-100"
+                        />
+
+                        {search && (
+                            <button
+                                type="button"
+                                onClick={() => setSearch('')}
+                                aria-label="Clear search"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-lg leading-none text-gray-400 transition hover:text-gray-700"
+                            >
+                                ×
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {loading ? (
-                    <div className="p-6 text-sm text-gray-500">
-                        Loading employee roles...
+                    <div className="flex items-center justify-center p-10">
+                        <p className="text-sm text-gray-500">
+                            Loading employee roles...
+                        </p>
                     </div>
                 ) : filteredEmployeeRoles.length === 0 ? (
-                    <div className="p-6 text-sm text-gray-500">
-                        No employee roles found.
+                    <div className="p-10 text-center">
+                        <p className="text-sm font-medium text-gray-700">
+                            {employeeRoles.length === 0
+                                ? 'No employee roles assigned yet.'
+                                : 'No employee roles match your search.'}
+                        </p>
+
+                        <p className="mt-1 text-sm text-gray-500">
+                            {employeeRoles.length === 0
+                                ? 'Assign a role above to get started.'
+                                : 'Try adjusting your search term.'}
+                        </p>
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
+                        <table className="min-w-[650px] w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
@@ -325,7 +380,10 @@ export default function EmployeeRolesPage() {
                                         const key = `${employeeRole.employeeId}-${employeeRole.roleId}`
 
                                         return (
-                                            <tr key={key}>
+                                            <tr
+                                                key={key}
+                                                className="transition hover:bg-gray-50"
+                                            >
                                                 <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
                                                     {
                                                         employeeRole.employeeName
@@ -348,10 +406,10 @@ export default function EmployeeRolesPage() {
                                                             )
                                                         }
                                                         disabled={
-                                                            deletingKey ===
-                                                            key
+                                                            deletingKey !==
+                                                            null
                                                         }
-                                                        className="font-medium text-red-600 hover:text-red-800 disabled:cursor-not-allowed disabled:opacity-50"
+                                                        className="font-medium text-red-600 transition hover:text-red-800 disabled:cursor-not-allowed disabled:opacity-50"
                                                     >
                                                         {deletingKey ===
                                                             key

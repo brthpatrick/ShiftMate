@@ -13,7 +13,6 @@ import type {
 } from '../types/employeePreference'
 import { getApiErrorMessage } from '../services/apiError'
 
-
 export default function EmployeePreferencesPage() {
     const [preferences, setPreferences] = useState<EmployeePreference[]>([])
     const [employees, setEmployees] = useState<Employee[]>([])
@@ -171,6 +170,12 @@ export default function EmployeePreferencesPage() {
                 ),
             )
 
+            if (editingEmployeeId === employeeId) {
+                setEditingEmployeeId(null)
+                setSelectedEmployeeId('')
+                setMaxWeeklyHours('40')
+            }
+
             setSuccess('Employee preference deleted successfully.')
         } catch (error) {
             setError(getApiErrorMessage(error))
@@ -204,30 +209,46 @@ export default function EmployeePreferencesPage() {
             )}
 
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                <h2 className="text-lg font-semibold text-gray-900">
-                    {editingEmployeeId !== null
-                        ? 'Edit Employee Preference'
-                        : 'Add Employee Preference'}
-                </h2>
+                <div className="mb-5">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                        {editingEmployeeId !== null
+                            ? 'Edit Employee Preference'
+                            : 'Add Employee Preference'}
+                    </h2>
+
+                    <p className="mt-1 text-sm text-gray-500">
+                        Set the maximum number of hours an employee can be
+                        scheduled per week.
+                    </p>
+                </div>
 
                 <form
                     onSubmit={handleSubmit}
-                    className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3"
+                    className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
                 >
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                        <label
+                            htmlFor="employee-preference-employee"
+                            className="mb-1 block text-sm font-medium text-gray-700"
+                        >
                             Employee
                         </label>
 
                         <select
+                            id="employee-preference-employee"
                             value={selectedEmployeeId}
                             onChange={(event) =>
                                 setSelectedEmployeeId(event.target.value)
                             }
-                            disabled={editingEmployeeId !== null}
-                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none disabled:bg-gray-100 disabled:text-gray-500"
+                            disabled={
+                                editingEmployeeId !== null ||
+                                saving
+                            }
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
                         >
-                            <option value="">Select employee</option>
+                            <option value="">
+                                Select employee
+                            </option>
 
                             {availableEmployees.map((employee) => (
                                 <option
@@ -242,11 +263,15 @@ export default function EmployeePreferencesPage() {
                     </div>
 
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                        <label
+                            htmlFor="max-weekly-hours"
+                            className="mb-1 block text-sm font-medium text-gray-700"
+                        >
                             Maximum Weekly Hours
                         </label>
 
                         <input
+                            id="max-weekly-hours"
                             type="number"
                             min="1"
                             step="0.5"
@@ -254,11 +279,16 @@ export default function EmployeePreferencesPage() {
                             onChange={(event) =>
                                 setMaxWeeklyHours(event.target.value)
                             }
-                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                            disabled={saving}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100"
                         />
+
+                        <p className="mt-1 text-xs text-gray-500">
+                            Enter a value greater than 0 hours.
+                        </p>
                     </div>
 
-                    <div className="flex items-end gap-2">
+                    <div className="flex flex-col justify-end gap-2 sm:flex-row">
                         <button
                             type="submit"
                             disabled={saving}
@@ -276,7 +306,7 @@ export default function EmployeePreferencesPage() {
                                 type="button"
                                 onClick={handleCancelEdit}
                                 disabled={saving}
-                                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none"
                             >
                                 Cancel
                             </button>
@@ -293,33 +323,64 @@ export default function EmployeePreferencesPage() {
                         </h2>
 
                         <p className="mt-1 text-sm text-gray-500">
-                            {filteredPreferences.length} preference
-                            {filteredPreferences.length !== 1
-                                ? 's'
+                            {filteredPreferences.length}{' '}
+                            {filteredPreferences.length === 1
+                                ? 'preference'
+                                : 'preferences'}
+                            {search.trim()
+                                ? ' matching your search'
                                 : ''}
                         </p>
                     </div>
 
-                    <input
-                        type="text"
-                        value={search}
-                        onChange={(event) => setSearch(event.target.value)}
-                        placeholder="Search employee..."
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none md:w-64"
-                    />
+                    <div className="relative w-full md:w-64">
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(event) =>
+                                setSearch(event.target.value)
+                            }
+                            placeholder="Search employee..."
+                            aria-label="Search employee"
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-100"
+                        />
+
+                        {search && (
+                            <button
+                                type="button"
+                                onClick={() => setSearch('')}
+                                aria-label="Clear search"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-lg leading-none text-gray-400 transition hover:text-gray-700"
+                            >
+                                ×
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {loading ? (
-                    <div className="p-6 text-sm text-gray-500">
-                        Loading preferences...
+                    <div className="flex items-center justify-center p-10">
+                        <p className="text-sm text-gray-500">
+                            Loading preferences...
+                        </p>
                     </div>
                 ) : filteredPreferences.length === 0 ? (
-                    <div className="p-6 text-sm text-gray-500">
-                        No employee preferences found.
+                    <div className="p-10 text-center">
+                        <p className="text-sm font-medium text-gray-700">
+                            {preferences.length === 0
+                                ? 'No employee preferences yet.'
+                                : 'No preferences match your search.'}
+                        </p>
+
+                        <p className="mt-1 text-sm text-gray-500">
+                            {preferences.length === 0
+                                ? 'Add an employee preference above to get started.'
+                                : 'Try adjusting your search term.'}
+                        </p>
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
+                        <table className="min-w-[650px] w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
@@ -337,53 +398,67 @@ export default function EmployeePreferencesPage() {
                             </thead>
 
                             <tbody className="divide-y divide-gray-200 bg-white">
-                                {filteredPreferences.map((preference) => (
-                                    <tr key={preference.id}>
-                                        <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
-                                            {preference.employeeName}
-                                        </td>
+                                {filteredPreferences.map(
+                                    (preference) => (
+                                        <tr
+                                            key={preference.id}
+                                            className="transition hover:bg-gray-50"
+                                        >
+                                            <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
+                                                {
+                                                    preference.employeeName
+                                                }
+                                            </td>
 
-                                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
-                                            {preference.maxWeeklyHours}{' '}
-                                            hours
-                                        </td>
+                                            <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
+                                                {
+                                                    preference.maxWeeklyHours
+                                                }{' '}
+                                                hours
+                                            </td>
 
-                                        <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
-                                            <div className="flex justify-end gap-3">
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        handleEdit(
-                                                            preference,
-                                                        )
-                                                    }
-                                                    className="font-medium text-blue-600 hover:text-blue-800"
-                                                >
-                                                    Edit
-                                                </button>
+                                            <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
+                                                <div className="flex justify-end gap-3">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            handleEdit(
+                                                                preference,
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            saving ||
+                                                            deletingId !==
+                                                            null
+                                                        }
+                                                        className="font-medium text-blue-600 transition hover:text-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+                                                    >
+                                                        Edit
+                                                    </button>
 
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        handleDelete(
-                                                            preference.employeeId,
-                                                        )
-                                                    }
-                                                    disabled={
-                                                        deletingId ===
-                                                        preference.employeeId
-                                                    }
-                                                    className="font-medium text-red-600 hover:text-red-800 disabled:cursor-not-allowed disabled:opacity-50"
-                                                >
-                                                    {deletingId ===
-                                                        preference.employeeId
-                                                        ? 'Deleting...'
-                                                        : 'Delete'}
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            handleDelete(
+                                                                preference.employeeId,
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            deletingId !==
+                                                            null
+                                                        }
+                                                        className="font-medium text-red-600 transition hover:text-red-800 disabled:cursor-not-allowed disabled:opacity-50"
+                                                    >
+                                                        {deletingId ===
+                                                            preference.employeeId
+                                                            ? 'Deleting...'
+                                                            : 'Delete'}
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ),
+                                )}
                             </tbody>
                         </table>
                     </div>

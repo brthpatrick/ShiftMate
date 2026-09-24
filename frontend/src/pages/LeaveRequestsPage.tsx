@@ -13,7 +13,6 @@ import type {
 } from '../types/leaveRequest'
 import { getApiErrorMessage } from '../services/apiError'
 
-
 function getStatusClass(status: string): string {
     switch (status.toLowerCase()) {
         case 'pending':
@@ -28,7 +27,11 @@ function getStatusClass(status: string): string {
 }
 
 function formatDate(date: string): string {
-    return new Date(date).toLocaleDateString()
+    return new Date(date).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+    })
 }
 
 export default function LeaveRequestsPage() {
@@ -45,7 +48,8 @@ export default function LeaveRequestsPage() {
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [processingId, setProcessingId] = useState<number | null>(null)
-    const [processingAction, setProcessingAction] = useState<'approve' | 'reject' | null>(null)
+    const [processingAction, setProcessingAction] =
+        useState<'approve' | 'reject' | null>(null)
 
     const [error, setError] = useState('')
     const [success, setSuccess] = useState('')
@@ -81,7 +85,9 @@ export default function LeaveRequestsPage() {
         }
 
         return leaveRequests.filter((request) =>
-            request.employeeName.toLowerCase().includes(searchTerm),
+            request.employeeName
+                .toLowerCase()
+                .includes(searchTerm),
         )
     }, [leaveRequests, search])
 
@@ -102,14 +108,14 @@ export default function LeaveRequestsPage() {
         }
 
         if (endDate < startDate) {
-            setError('End date must be later than or equal to start date.')
+            setError(
+                'End date must be later than or equal to start date.',
+            )
             return
         }
 
         try {
             setSaving(true)
-            setError('')
-            setSuccess('')
 
             const request: CreateLeaveRequest = {
                 employeeId: Number(selectedEmployeeId),
@@ -175,6 +181,12 @@ export default function LeaveRequestsPage() {
         }
     }
 
+    const activeEmployees = employees.filter(
+        (employee) => employee.isActive,
+    )
+
+    const isProcessing = processingId !== null
+
     return (
         <div className="space-y-6">
             <div>
@@ -200,98 +212,137 @@ export default function LeaveRequestsPage() {
             )}
 
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                <h2 className="text-lg font-semibold text-gray-900">
-                    Create Leave Request
-                </h2>
+                <div className="mb-5">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                        Create Leave Request
+                    </h2>
+
+                    <p className="mt-1 text-sm text-gray-500">
+                        Create a leave period for an active employee.
+                    </p>
+                </div>
 
                 <form
                     onSubmit={handleCreate}
-                    className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4"
+                    className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4"
                 >
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                        <label
+                            htmlFor="leave-employee"
+                            className="mb-1 block text-sm font-medium text-gray-700"
+                        >
                             Employee
                         </label>
 
                         <select
+                            id="leave-employee"
                             value={selectedEmployeeId}
                             onChange={(event) =>
-                                setSelectedEmployeeId(event.target.value)
+                                setSelectedEmployeeId(
+                                    event.target.value,
+                                )
                             }
-                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                            disabled={saving}
+                            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
                         >
-                            <option value="">Select employee</option>
+                            <option value="">
+                                Select employee
+                            </option>
 
-                            {employees
-                                .filter((employee) => employee.isActive)
-                                .map((employee) => (
-                                    <option
-                                        key={employee.id}
-                                        value={employee.id}
-                                    >
-                                        {employee.firstName}{' '}
-                                        {employee.lastName}
-                                    </option>
-                                ))}
+                            {activeEmployees.map((employee) => (
+                                <option
+                                    key={employee.id}
+                                    value={employee.id}
+                                >
+                                    {employee.firstName}{' '}
+                                    {employee.lastName}
+                                </option>
+                            ))}
                         </select>
                     </div>
 
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                        <label
+                            htmlFor="leave-start-date"
+                            className="mb-1 block text-sm font-medium text-gray-700"
+                        >
                             Start Date
                         </label>
 
                         <input
+                            id="leave-start-date"
                             type="date"
                             value={startDate}
                             onChange={(event) =>
                                 setStartDate(event.target.value)
                             }
-                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                            disabled={saving}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100"
                         />
                     </div>
 
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                        <label
+                            htmlFor="leave-end-date"
+                            className="mb-1 block text-sm font-medium text-gray-700"
+                        >
                             End Date
                         </label>
 
                         <input
+                            id="leave-end-date"
                             type="date"
                             value={endDate}
+                            min={startDate || undefined}
                             onChange={(event) =>
                                 setEndDate(event.target.value)
                             }
-                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                            disabled={saving}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100"
                         />
                     </div>
 
                     <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                        <label
+                            htmlFor="leave-reason"
+                            className="mb-1 block text-sm font-medium text-gray-700"
+                        >
                             Reason
                         </label>
 
                         <input
+                            id="leave-reason"
                             type="text"
                             value={reason}
                             onChange={(event) =>
                                 setReason(event.target.value)
                             }
                             placeholder="Optional reason"
-                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                            disabled={saving}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100"
                         />
                     </div>
 
                     <div className="md:col-span-2 lg:col-span-4">
                         <button
                             type="submit"
-                            disabled={saving}
-                            className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            disabled={
+                                saving ||
+                                activeEmployees.length === 0
+                            }
+                            className="w-full rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                         >
                             {saving
                                 ? 'Creating...'
                                 : 'Create Leave Request'}
                         </button>
+
+                        {activeEmployees.length === 0 && (
+                            <p className="mt-2 text-xs text-gray-500">
+                                No active employees are available for a
+                                leave request.
+                            </p>
+                        )}
                     </div>
                 </form>
             </div>
@@ -304,33 +355,64 @@ export default function LeaveRequestsPage() {
                         </h2>
 
                         <p className="mt-1 text-sm text-gray-500">
-                            {filteredLeaveRequests.length} request
-                            {filteredLeaveRequests.length !== 1
-                                ? 's'
+                            {filteredLeaveRequests.length}{' '}
+                            {filteredLeaveRequests.length === 1
+                                ? 'request'
+                                : 'requests'}
+                            {search.trim()
+                                ? ' matching your search'
                                 : ''}
                         </p>
                     </div>
 
-                    <input
-                        type="text"
-                        value={search}
-                        onChange={(event) => setSearch(event.target.value)}
-                        placeholder="Search employee..."
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none md:w-64"
-                    />
+                    <div className="relative w-full md:w-64">
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(event) =>
+                                setSearch(event.target.value)
+                            }
+                            placeholder="Search employee..."
+                            aria-label="Search employee"
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-100"
+                        />
+
+                        {search && (
+                            <button
+                                type="button"
+                                onClick={() => setSearch('')}
+                                aria-label="Clear search"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-lg leading-none text-gray-400 transition hover:text-gray-700"
+                            >
+                                ×
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {loading ? (
-                    <div className="p-6 text-sm text-gray-500">
-                        Loading leave requests...
+                    <div className="flex items-center justify-center p-10">
+                        <p className="text-sm text-gray-500">
+                            Loading leave requests...
+                        </p>
                     </div>
                 ) : filteredLeaveRequests.length === 0 ? (
-                    <div className="p-6 text-sm text-gray-500">
-                        No leave requests found.
+                    <div className="p-10 text-center">
+                        <p className="text-sm font-medium text-gray-700">
+                            {leaveRequests.length === 0
+                                ? 'No leave requests yet.'
+                                : 'No leave requests match your search.'}
+                        </p>
+
+                        <p className="mt-1 text-sm text-gray-500">
+                            {leaveRequests.length === 0
+                                ? 'Create a leave request above to get started.'
+                                : 'Try adjusting your search term.'}
+                        </p>
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
+                        <table className="min-w-[1000px] w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
@@ -360,74 +442,111 @@ export default function LeaveRequestsPage() {
                             </thead>
 
                             <tbody className="divide-y divide-gray-200 bg-white">
-                                {filteredLeaveRequests.map((request) => (
-                                    <tr key={request.id}>
-                                        <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
-                                            {request.employeeName}
-                                        </td>
+                                {filteredLeaveRequests.map(
+                                    (request) => {
+                                        const isCurrentRequestProcessing =
+                                            processingId === request.id
 
-                                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
-                                            {formatDate(request.startDate)}
-                                        </td>
-
-                                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
-                                            {formatDate(request.endDate)}
-                                        </td>
-
-                                        <td className="max-w-xs px-6 py-4 text-sm text-gray-700">
-                                            {request.reason || '-'}
-                                        </td>
-
-                                        <td className="whitespace-nowrap px-6 py-4 text-sm">
-                                            <span
-                                                className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${getStatusClass(
-                                                    request.status,
-                                                )}`}
+                                        return (
+                                            <tr
+                                                key={request.id}
+                                                className="transition hover:bg-gray-50"
                                             >
-                                                {request.status}
-                                            </span>
-                                        </td>
+                                                <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
+                                                    {
+                                                        request.employeeName
+                                                    }
+                                                </td>
 
-                                        <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
-                                            {request.status.toLowerCase() ===
-                                                'pending' ? (
-                                                <div className="flex justify-end gap-2">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            handleApprove(request.id)
-                                                        }
-                                                        disabled={processingId === request.id}
-                                                        className="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-                                                    >
-                                                        {processingId === request.id &&
-                                                            processingAction === 'approve'
-                                                            ? 'Approving...'
-                                                            : 'Approve'}
-                                                    </button>
+                                                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
+                                                    {formatDate(
+                                                        request.startDate,
+                                                    )}
+                                                </td>
 
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            handleReject(request.id)
+                                                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
+                                                    {formatDate(
+                                                        request.endDate,
+                                                    )}
+                                                </td>
+
+                                                <td className="max-w-xs px-6 py-4 text-sm text-gray-700">
+                                                    <span
+                                                        className="block max-w-xs truncate"
+                                                        title={
+                                                            request.reason ||
+                                                            undefined
                                                         }
-                                                        disabled={processingId === request.id}
-                                                        className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                                                     >
-                                                        {processingId === request.id &&
-                                                            processingAction === 'reject'
-                                                            ? 'Rejecting...'
-                                                            : 'Reject'}
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                <span className="text-gray-400">
-                                                    No actions
-                                                </span>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
+                                                        {request.reason ||
+                                                            '—'}
+                                                    </span>
+                                                </td>
+
+                                                <td className="whitespace-nowrap px-6 py-4 text-sm">
+                                                    <span
+                                                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${getStatusClass(
+                                                            request.status,
+                                                        )}`}
+                                                    >
+                                                        {
+                                                            request.status
+                                                        }
+                                                    </span>
+                                                </td>
+
+                                                <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
+                                                    {request.status.toLowerCase() ===
+                                                        'pending' ? (
+                                                        <div className="flex justify-end gap-2">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    handleApprove(
+                                                                        request.id,
+                                                                    )
+                                                                }
+                                                                disabled={
+                                                                    isProcessing
+                                                                }
+                                                                className="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                                            >
+                                                                {isCurrentRequestProcessing &&
+                                                                    processingAction ===
+                                                                    'approve'
+                                                                    ? 'Approving...'
+                                                                    : 'Approve'}
+                                                            </button>
+
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    handleReject(
+                                                                        request.id,
+                                                                    )
+                                                                }
+                                                                disabled={
+                                                                    isProcessing
+                                                                }
+                                                                className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                                            >
+                                                                {isCurrentRequestProcessing &&
+                                                                    processingAction ===
+                                                                    'reject'
+                                                                    ? 'Rejecting...'
+                                                                    : 'Reject'}
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-gray-400">
+                                                            No actions
+                                                        </span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        )
+                                    },
+                                )}
                             </tbody>
                         </table>
                     </div>

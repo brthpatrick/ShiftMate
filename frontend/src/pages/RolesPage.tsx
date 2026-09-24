@@ -9,9 +9,9 @@ import type {
 } from '../types/role'
 import { getApiErrorMessage } from '../services/apiError'
 
-
 export default function RolesPage() {
     const [roles, setRoles] = useState<Role[]>([])
+
     const [roleName, setRoleName] = useState('')
     const [search, setSearch] = useState('')
 
@@ -100,53 +100,68 @@ export default function RolesPage() {
             </div>
 
             {error && (
-                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                <div
+                    role="alert"
+                    className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+                >
                     {error}
                 </div>
             )}
 
             {success && (
-                <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+                <div
+                    role="status"
+                    className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700"
+                >
                     {success}
                 </div>
             )}
 
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                <h2 className="text-lg font-semibold text-gray-900">
-                    Add Role
-                </h2>
+                <div className="mb-5">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                        Add Role
+                    </h2>
+
+                    <p className="mt-1 text-sm text-gray-500">
+                        Create a role that can be assigned to employees.
+                    </p>
+                </div>
 
                 <form
                     onSubmit={handleSubmit}
-                    className="mt-5 flex flex-col gap-4 md:flex-row"
+                    className="flex flex-col gap-4 sm:flex-row sm:items-end"
                 >
                     <div className="flex-1">
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                        <label
+                            htmlFor="role-name"
+                            className="mb-1 block text-sm font-medium text-gray-700"
+                        >
                             Role Name
                         </label>
 
                         <input
+                            id="role-name"
                             type="text"
                             value={roleName}
                             onChange={(event) =>
                                 setRoleName(event.target.value)
                             }
                             placeholder="e.g. Cashier"
-                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                            disabled={saving}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
                         />
                     </div>
 
-                    <div className="flex items-end">
-                        <button
-                            type="submit"
-                            disabled={saving}
-                            className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                            {saving
-                                ? 'Saving...'
-                                : 'Add Role'}
-                        </button>
-                    </div>
+                    <button
+                        type="submit"
+                        disabled={saving}
+                        className="w-full rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                    >
+                        {saving
+                            ? 'Saving...'
+                            : 'Add Role'}
+                    </button>
                 </form>
             </div>
 
@@ -158,35 +173,64 @@ export default function RolesPage() {
                         </h2>
 
                         <p className="mt-1 text-sm text-gray-500">
-                            {filteredRoles.length} role
-                            {filteredRoles.length !== 1
-                                ? 's'
+                            {filteredRoles.length}{' '}
+                            {filteredRoles.length === 1
+                                ? 'role'
+                                : 'roles'}
+                            {search.trim()
+                                ? ' matching your search'
                                 : ''}
                         </p>
                     </div>
 
-                    <input
-                        type="text"
-                        value={search}
-                        onChange={(event) =>
-                            setSearch(event.target.value)
-                        }
-                        placeholder="Search role..."
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none md:w-64"
-                    />
+                    <div className="relative w-full md:w-64">
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(event) =>
+                                setSearch(event.target.value)
+                            }
+                            placeholder="Search role..."
+                            aria-label="Search roles"
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-100"
+                        />
+
+                        {search && (
+                            <button
+                                type="button"
+                                onClick={() => setSearch('')}
+                                aria-label="Clear search"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-lg leading-none text-gray-400 transition hover:text-gray-700"
+                            >
+                                ×
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {loading ? (
-                    <div className="p-6 text-sm text-gray-500">
-                        Loading roles...
+                    <div className="flex items-center justify-center p-10">
+                        <p className="text-sm text-gray-500">
+                            Loading roles...
+                        </p>
                     </div>
                 ) : filteredRoles.length === 0 ? (
-                    <div className="p-6 text-sm text-gray-500">
-                        No roles found.
+                    <div className="p-10 text-center">
+                        <p className="text-sm font-medium text-gray-700">
+                            {roles.length === 0
+                                ? 'No roles yet.'
+                                : 'No roles match your search.'}
+                        </p>
+
+                        <p className="mt-1 text-sm text-gray-500">
+                            {roles.length === 0
+                                ? 'Add a role above to get started.'
+                                : 'Try adjusting your search term.'}
+                        </p>
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
+                        <table className="min-w-[500px] w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
@@ -201,7 +245,10 @@ export default function RolesPage() {
 
                             <tbody className="divide-y divide-gray-200 bg-white">
                                 {filteredRoles.map((role) => (
-                                    <tr key={role.id}>
+                                    <tr
+                                        key={role.id}
+                                        className="transition hover:bg-gray-50"
+                                    >
                                         <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
                                             {role.name}
                                         </td>

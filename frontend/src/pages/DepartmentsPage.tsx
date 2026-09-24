@@ -9,7 +9,6 @@ import type {
 } from '../types/department'
 import { getApiErrorMessage } from '../services/apiError'
 
-
 export default function DepartmentsPage() {
     const [departments, setDepartments] = useState<Department[]>([])
     const [departmentName, setDepartmentName] = useState('')
@@ -27,7 +26,6 @@ export default function DepartmentsPage() {
             setError('')
 
             const data = await getDepartments()
-
             setDepartments(data)
         } catch (error) {
             setError(getApiErrorMessage(error))
@@ -79,6 +77,7 @@ export default function DepartmentsPage() {
             await createDepartment(request)
 
             setDepartmentName('')
+
             setSuccess(
                 'Department created successfully.',
             )
@@ -116,20 +115,30 @@ export default function DepartmentsPage() {
             )}
 
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                <h2 className="text-lg font-semibold text-gray-900">
-                    Add Department
-                </h2>
+                <div className="mb-5">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                        Add Department
+                    </h2>
+
+                    <p className="mt-1 text-sm text-gray-500">
+                        Create a department for organizing employees.
+                    </p>
+                </div>
 
                 <form
                     onSubmit={handleSubmit}
-                    className="mt-5 flex flex-col gap-4 md:flex-row"
+                    className="flex flex-col gap-4 md:flex-row"
                 >
                     <div className="flex-1">
-                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                        <label
+                            htmlFor="department-name"
+                            className="mb-1 block text-sm font-medium text-gray-700"
+                        >
                             Department Name
                         </label>
 
                         <input
+                            id="department-name"
                             type="text"
                             value={departmentName}
                             onChange={(event) =>
@@ -138,7 +147,8 @@ export default function DepartmentsPage() {
                                 )
                             }
                             placeholder="e.g. Sales"
-                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                            disabled={saving}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100"
                         />
                     </div>
 
@@ -146,7 +156,7 @@ export default function DepartmentsPage() {
                         <button
                             type="submit"
                             disabled={saving}
-                            className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="w-full rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
                         >
                             {saving
                                 ? 'Saving...'
@@ -165,35 +175,63 @@ export default function DepartmentsPage() {
 
                         <p className="mt-1 text-sm text-gray-500">
                             {filteredDepartments.length}{' '}
-                            department
-                            {filteredDepartments.length !== 1
-                                ? 's'
+                            {filteredDepartments.length === 1
+                                ? 'department'
+                                : 'departments'}
+                            {search.trim()
+                                ? ' matching your search'
                                 : ''}
                         </p>
                     </div>
 
-                    <input
-                        type="text"
-                        value={search}
-                        onChange={(event) =>
-                            setSearch(event.target.value)
-                        }
-                        placeholder="Search department..."
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none md:w-64"
-                    />
+                    <div className="relative w-full md:w-64">
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(event) =>
+                                setSearch(event.target.value)
+                            }
+                            placeholder="Search department..."
+                            aria-label="Search department"
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 pr-10 text-sm outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-100"
+                        />
+
+                        {search && (
+                            <button
+                                type="button"
+                                onClick={() => setSearch('')}
+                                aria-label="Clear search"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-lg leading-none text-gray-400 transition hover:text-gray-700"
+                            >
+                                ×
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {loading ? (
-                    <div className="p-6 text-sm text-gray-500">
-                        Loading departments...
+                    <div className="flex items-center justify-center p-10">
+                        <p className="text-sm text-gray-500">
+                            Loading departments...
+                        </p>
                     </div>
                 ) : filteredDepartments.length === 0 ? (
-                    <div className="p-6 text-sm text-gray-500">
-                        No departments found.
+                    <div className="p-10 text-center">
+                        <p className="text-sm font-medium text-gray-700">
+                            {departments.length === 0
+                                ? 'No departments yet.'
+                                : 'No departments match your search.'}
+                        </p>
+
+                        <p className="mt-1 text-sm text-gray-500">
+                            {departments.length === 0
+                                ? 'Create a department above to get started.'
+                                : 'Try adjusting your search term.'}
+                        </p>
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
+                        <table className="min-w-[500px] w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
@@ -210,9 +248,8 @@ export default function DepartmentsPage() {
                                 {filteredDepartments.map(
                                     (department) => (
                                         <tr
-                                            key={
-                                                department.id
-                                            }
+                                            key={department.id}
+                                            className="transition hover:bg-gray-50"
                                         >
                                             <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
                                                 {
