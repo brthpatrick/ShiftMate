@@ -25,6 +25,7 @@ function MainLayout() {
         { label: 'Departments', path: '/departments' },
         { label: 'Locations', path: '/locations' },
         { label: 'Scheduling Candidates', path: '/scheduling-candidates' },
+        { label: 'Employee Workload', path: '/employee-workload' },
         { label: 'Automatic Scheduling', path: '/automatic-scheduling' },
     ]
 

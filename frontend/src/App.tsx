@@ -17,6 +17,8 @@ import LocationsPage from './pages/LocationsPage'
 import SchedulingCandidatesPage from './pages/SchedulingCandidatesPage'
 import AutomaticSchedulingPage from './pages/AutomaticSchedulingPage'
 import ShiftRoleRequirementsPage from './pages/ShiftRoleRequirementsPage'
+import EmployeeWorkloadPage from './pages/EmployeeWorkloadPage'
+
 
 function App() {
   return (
@@ -101,6 +103,11 @@ function App() {
           <Route
             path="/shift-role-requirements"
             element={<ShiftRoleRequirementsPage />}
+          />
+
+          <Route
+            path="/employee-workload"
+            element={<EmployeeWorkloadPage />}
           />
         </Route>
       </Routes>
