@@ -7,7 +7,7 @@ import {
 
 import type { ReactNode } from 'react'
 
-import { login as loginRequest } from '../services/authService'
+import { login as loginRequest, logout as logoutRequest } from '../services/authService'
 
 import {
   getToken,
@@ -19,7 +19,7 @@ import type { LoginRequest } from '../types/auth'
 interface AuthContextValue {
   isAuthenticated: boolean
   login: (credentials: LoginRequest) => Promise<void>
-  logout: () => void
+  logout: () => Promise<void>
 }
 
 const AuthContext = createContext<
@@ -44,9 +44,13 @@ export function AuthProvider({
     setIsAuthenticated(true)
   }
 
-  const logout = () => {
-    clearAuthStorage()
-    setIsAuthenticated(false)
+  const logout = async () => {
+    try {
+      await logoutRequest()
+    } finally {
+      clearAuthStorage()
+      setIsAuthenticated(false)
+    }
   }
 
   const value = useMemo(

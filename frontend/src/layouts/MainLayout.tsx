@@ -5,8 +5,8 @@ function MainLayout() {
     const { logout } = useAuth()
     const navigate = useNavigate()
 
-    const handleLogout = () => {
-        logout()
+    const handleLogout = async () => {
+        await logout()
         navigate('/login')
     }
 
@@ -72,7 +72,7 @@ function MainLayout() {
 
             <div className="flex min-w-0 flex-1 flex-col">
                 <header className="border-b bg-white px-8 py-5">
-                    <h2 className="text-lg font-semibolt text-gray-900">
+                    <h2 className="text-lg font-semibold text-gray-900">
                         ShiftMate
                     </h2>
                 </header>

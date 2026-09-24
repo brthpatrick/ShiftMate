@@ -3,6 +3,7 @@ import api from './api'
 import {
   setToken,
   setRefreshToken,
+  getRefreshToken,
 } from './authStorage'
 
 import type {
@@ -22,4 +23,16 @@ export const login = async (
   setRefreshToken(response.data.refreshToken)
 
   return response.data
+}
+
+export const logout = async (): Promise<void> => {
+  const refreshToken = getRefreshToken()
+
+  if (!refreshToken) {
+    return
+  }
+
+  await api.post('/Authentication/logout', {
+    refreshToken,
+  })
 }
