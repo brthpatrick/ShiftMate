@@ -3,15 +3,7 @@ import { getShifts } from '../services/shiftService'
 import { runAutomaticScheduling } from '../services/automaticSchedulingService'
 import type { Shift } from '../types/shift'
 import type { AutomaticSchedulingResult } from '../types/automaticScheduling'
-
-const getErrorMessage = (error: any): string => {
-    return (
-        error?.response?.data?.message ||
-        error?.response?.data?.title ||
-        error?.response?.data?.errors?.[0] ||
-        'An unexpected error occurred.'
-    )
-}
+import { getApiErrorMessage } from '../services/apiError'
 
 const formatDateTime = (value: string): string => {
     return new Date(value).toLocaleString()
@@ -58,7 +50,7 @@ function AutomaticSchedulingPage() {
                 const data = await getShifts()
                 setShifts(data)
             } catch (err) {
-                setError(getErrorMessage(err))
+                setError(getApiErrorMessage(err))
             } finally {
                 setLoadingShifts(false)
             }
@@ -99,7 +91,7 @@ function AutomaticSchedulingPage() {
                 )
             }
         } catch (err) {
-            setError(getErrorMessage(err))
+            setError(getApiErrorMessage(err))
         } finally {
             setIsRunning(false)
         }

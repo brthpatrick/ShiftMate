@@ -10,15 +10,7 @@ import {
 import type { Shift } from '../types/shift'
 import type { Role } from '../types/role'
 import type { ShiftRoleRequirement } from '../types/shiftRoleRequirement'
-
-const getErrorMessage = (error: any): string => {
-    return (
-        error?.response?.data?.message ||
-        error?.response?.data?.title ||
-        error?.response?.data?.errors?.[0] ||
-        'An unexpected error occurred.'
-    )
-}
+import { getApiErrorMessage } from '../services/apiError'
 
 const formatDateTime = (value: string): string => {
     return new Date(value).toLocaleString()
@@ -65,7 +57,7 @@ function ShiftRoleRequirementsPage() {
                 setRoles(rolesData)
                 setRequirements(requirementsData)
             } catch (err) {
-                setError(getErrorMessage(err))
+                setError(getApiErrorMessage(err))
             } finally {
                 setIsLoading(false)
             }
@@ -126,7 +118,7 @@ function ShiftRoleRequirementsPage() {
                 'Shift role requirement created successfully.',
             )
         } catch (err) {
-            setFormError(getErrorMessage(err))
+            setFormError(getApiErrorMessage(err))
         } finally {
             setIsSubmitting(false)
         }
@@ -150,7 +142,7 @@ function ShiftRoleRequirementsPage() {
                 'Shift role requirement deleted successfully.',
             )
         } catch (err) {
-            setError(getErrorMessage(err))
+            setError(getApiErrorMessage(err))
         } finally {
             setDeletingId(null)
         }

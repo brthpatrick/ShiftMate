@@ -3,15 +3,7 @@ import { getEmployees } from '../services/employeeService'
 import { getEmployeeWorkload } from '../services/employeeWorkloadService'
 import type { Employee } from '../types/employee'
 import type { EmployeeWorkload } from '../types/employeeWorkload'
-
-const getErrorMessage = (error: any): string => {
-    return (
-        error?.response?.data?.message ||
-        error?.response?.data?.title ||
-        error?.response?.data?.errors?.[0] ||
-        'An unexpected error occurred.'
-    )
-}
+import { getApiErrorMessage } from '../services/apiError'
 
 function EmployeeWorkloadPage() {
     const [employees, setEmployees] = useState<Employee[]>([])
@@ -36,7 +28,7 @@ function EmployeeWorkloadPage() {
                 const data = await getEmployees()
                 setEmployees(data)
             } catch (err) {
-                setError(getErrorMessage(err))
+                setError(getApiErrorMessage(err))
             } finally {
                 setIsLoading(false)
             }
@@ -63,7 +55,7 @@ function EmployeeWorkloadPage() {
 
             setWorkload(data)
         } catch (err) {
-            setError(getErrorMessage(err))
+            setError(getApiErrorMessage(err))
         } finally {
             setIsLoadingWorkload(false)
         }

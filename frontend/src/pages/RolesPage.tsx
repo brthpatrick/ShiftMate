@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { AxiosError } from 'axios'
 import {
     createRole,
     getRoles,
@@ -8,45 +7,8 @@ import type {
     CreateRoleRequest,
     Role,
 } from '../types/role'
+import { getApiErrorMessage } from '../services/apiError'
 
-function getErrorMessage(error: unknown): string {
-    const axiosError = error as AxiosError<
-        | string
-        | {
-            message?: string
-            title?: string
-            errors?: Record<string, string[]>
-        }
-    >
-
-    const data = axiosError.response?.data
-
-    if (typeof data === 'string' && data.trim()) {
-        return data
-    }
-
-    if (data && typeof data === 'object') {
-        if ('message' in data && data.message) {
-            return data.message
-        }
-
-        if ('title' in data && data.title) {
-            return data.title
-        }
-
-        if ('errors' in data && data.errors) {
-            const firstError = Object.values(data.errors)
-                .flat()
-                .find((message) => message)
-
-            if (firstError) {
-                return firstError
-            }
-        }
-    }
-
-    return 'An unexpected error occurred.'
-}
 
 export default function RolesPage() {
     const [roles, setRoles] = useState<Role[]>([])
@@ -68,7 +30,7 @@ export default function RolesPage() {
 
             setRoles(data)
         } catch (error) {
-            setError(getErrorMessage(error))
+            setError(getApiErrorMessage(error))
         } finally {
             setLoading(false)
         }
@@ -118,7 +80,7 @@ export default function RolesPage() {
 
             await loadRoles()
         } catch (error) {
-            setError(getErrorMessage(error))
+            setError(getApiErrorMessage(error))
         } finally {
             setSaving(false)
         }

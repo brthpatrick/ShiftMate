@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { AxiosError } from 'axios'
 import {
     createEmployeeRole,
     deleteEmployeeRole,
@@ -13,45 +12,7 @@ import type {
     CreateEmployeeRoleRequest,
     EmployeeRole,
 } from '../types/employeeRole'
-
-function getErrorMessage(error: unknown): string {
-    const axiosError = error as AxiosError<
-        | string
-        | {
-            message?: string
-            title?: string
-            errors?: Record<string, string[]>
-        }
-    >
-
-    const data = axiosError.response?.data
-
-    if (typeof data === 'string' && data.trim()) {
-        return data
-    }
-
-    if (data && typeof data === 'object') {
-        if ('message' in data && data.message) {
-            return data.message
-        }
-
-        if ('title' in data && data.title) {
-            return data.title
-        }
-
-        if ('errors' in data && data.errors) {
-            const firstError = Object.values(data.errors)
-                .flat()
-                .find((message) => message)
-
-            if (firstError) {
-                return firstError
-            }
-        }
-    }
-
-    return 'An unexpected error occurred.'
-}
+import { getApiErrorMessage } from '../services/apiError'
 
 export default function EmployeeRolesPage() {
     const [employeeRoles, setEmployeeRoles] = useState<EmployeeRole[]>(
@@ -90,7 +51,7 @@ export default function EmployeeRolesPage() {
             setEmployees(employeeData)
             setRoles(roleData)
         } catch (error) {
-            setError(getErrorMessage(error))
+            setError(getApiErrorMessage(error))
         } finally {
             setLoading(false)
         }
@@ -154,7 +115,7 @@ export default function EmployeeRolesPage() {
 
             await loadData()
         } catch (error) {
-            setError(getErrorMessage(error))
+            setError(getApiErrorMessage(error))
         } finally {
             setSaving(false)
         }
@@ -187,7 +148,7 @@ export default function EmployeeRolesPage() {
                 'Employee role removed successfully.',
             )
         } catch (error) {
-            setError(getErrorMessage(error))
+            setError(getApiErrorMessage(error))
         } finally {
             setDeletingKey(null)
         }

@@ -6,6 +6,8 @@ import type { Shift } from '../types/shift'
 import { getShiftAssignments, assignEmployeeToShift } from '../services/shiftAssignmentService'
 import { getEmployees } from '../services/employeeService'
 import { getShifts } from '../services/shiftService'
+import { getApiErrorMessage } from '../services/apiError'
+
 
 interface AssignmentFormData {
     shiftId: number
@@ -66,10 +68,8 @@ function AssignmentsPage() {
                 setAssignments(assignmentsData)
                 setEmployees(employeesData)
                 setShifts(shiftsData)
-            } catch {
-                setError(
-                    'Failed to load assignments, employees and shifts.',
-                )
+            } catch (error) {
+                setError(getApiErrorMessage(error))
             } finally {
                 setIsLoading(false)
             }
@@ -137,14 +137,8 @@ function AssignmentsPage() {
 
             setFormData(getDefaultFormData())
             setShowForm(false)
-        } catch (error: any) {
-            const message =
-                error?.response?.data?.message
-
-            setFormError(
-                message ??
-                'Failed to assign employee. Please check the selected shift and employee.',
-            )
+        } catch (error) {
+            setFormError(getApiErrorMessage(error))
         } finally {
             setIsSubmitting(false)
         }

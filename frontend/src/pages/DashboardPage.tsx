@@ -9,6 +9,8 @@ import {
     getLeaveRequests,
     getShiftAssignments,
 } from '../services/dashboardService'
+import { getApiErrorMessage } from '../services/apiError'
+
 
 function DashboardPage() {
     const [employees, setEmployees] = useState<Employee[]>([])
@@ -41,8 +43,8 @@ function DashboardPage() {
                 setShifts(shiftsData)
                 setLeaveRequests(leaveRequestsData)
                 setAssignments(assignmentsData)
-            } catch {
-                setError('Failed to load dashboard data.')
+            } catch (error) {
+                setError(getApiErrorMessage(error))
             } finally {
                 setIsLoading(false)
             }

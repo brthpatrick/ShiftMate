@@ -12,6 +12,8 @@ import {
     updateEmployee,
 } from '../services/employeeService'
 import { getDepartments } from '../services/departmentService'
+import { getApiErrorMessage } from '../services/apiError'
+
 
 interface EmployeeFormData {
     firstName: string
@@ -67,10 +69,8 @@ function EmployeesPage() {
 
                 setEmployees(employeesData)
                 setDepartments(departmentsData)
-            } catch {
-                setError(
-                    'Failed to load employees and departments.',
-                )
+            } catch (error){
+                setError(getApiErrorMessage(error))
             } finally {
                 setIsLoading(false)
             }
@@ -144,10 +144,8 @@ function EmployeesPage() {
 
             resetForm()
             setShowForm(false)
-        } catch {
-            setFormError(
-                'Failed to create employee. Please check the entered data.',
-            )
+        } catch (error) {
+            setFormError(getApiErrorMessage(error))
         } finally {
             setIsSubmitting(false)
         }
@@ -191,10 +189,8 @@ function EmployeesPage() {
 
             resetForm()
             setShowForm(false)
-        } catch {
-            setFormError(
-                'Failed to update employee. Please check the entered data.',
-            )
+        } catch (error) {
+            setFormError(getApiErrorMessage(error))
         } finally {
             setIsSubmitting(false)
         }

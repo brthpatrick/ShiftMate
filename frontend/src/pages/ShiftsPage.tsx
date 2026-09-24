@@ -4,6 +4,8 @@ import type { Shift, CreateShiftRequest } from '../types/shift'
 import type { Location } from '../types/location'
 import { getShifts, createShift, updateShiftStatus } from '../services/shiftService'
 import { getLocations } from '../services/locationService'
+import { getApiErrorMessage } from '../services/apiError'
+
 
 interface ShiftFormData {
     locationId: number
@@ -107,10 +109,8 @@ function ShiftsPage() {
 
                 setShifts(shiftsData)
                 setLocations(locationsData)
-            } catch {
-                setError(
-                    'Failed to load shifts and locations.',
-                )
+            } catch (error) {
+                setError(getApiErrorMessage(error))
             } finally {
                 setIsLoading(false)
             }
@@ -208,10 +208,8 @@ function ShiftsPage() {
 
             setFormData(getDefaultFormData())
             setShowForm(false)
-        } catch {
-            setFormError(
-                'Failed to create shift. Please check the entered data.',
-            )
+        } catch (error) {
+            setFormError(getApiErrorMessage(error))
         } finally {
             setIsSubmitting(false)
         }
@@ -241,8 +239,8 @@ function ShiftsPage() {
                     shift.id === updatedShift.id ? updatedShift : shift,
                 ),
             )
-        } catch {
-            setStatusUpdateError('Failed to update shift status.')
+        } catch (error) {
+            setStatusUpdateError(getApiErrorMessage(error))
         } finally {
             setStatusUpdatingId(null)
         }

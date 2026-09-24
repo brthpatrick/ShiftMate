@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { getApiErrorMessage } from '../services/apiError'
+
 
 function LoginPage() {
   const { login } = useAuth()
@@ -23,8 +25,8 @@ function LoginPage() {
       })
 
       window.location.href = '/'
-    } catch {
-      setError('Invalid email or password.')
+    } catch (error) {
+      setError(getApiErrorMessage(error))
     } finally {
       setIsLoading(false)
     }

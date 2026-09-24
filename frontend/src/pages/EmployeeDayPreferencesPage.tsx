@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { AxiosError } from 'axios'
 import {
     createEmployeeDayPreference,
     deleteEmployeeDayPreference,
@@ -11,6 +10,7 @@ import type {
     CreateEmployeeDayPreferenceRequest,
     EmployeeDayPreference,
 } from '../types/employeeDayPreference'
+import { getApiErrorMessage } from '../services/apiError'
 
 const daysOfWeek = [
     { value: 0, label: 'Sunday' },
@@ -21,45 +21,6 @@ const daysOfWeek = [
     { value: 5, label: 'Friday' },
     { value: 6, label: 'Saturday' },
 ]
-
-function getErrorMessage(error: unknown): string {
-    const axiosError = error as AxiosError<
-        | string
-        | {
-            message?: string
-            title?: string
-            errors?: Record<string, string[]>
-        }
-    >
-
-    const data = axiosError.response?.data
-
-    if (typeof data === 'string' && data.trim()) {
-        return data
-    }
-
-    if (data && typeof data === 'object') {
-        if ('message' in data && data.message) {
-            return data.message
-        }
-
-        if ('title' in data && data.title) {
-            return data.title
-        }
-
-        if ('errors' in data && data.errors) {
-            const firstError = Object.values(data.errors)
-                .flat()
-                .find((message) => message)
-
-            if (firstError) {
-                return firstError
-            }
-        }
-    }
-
-    return 'An unexpected error occurred.'
-}
 
 function getDayName(dayOfWeek: number): string {
     return (
@@ -101,7 +62,7 @@ export default function EmployeeDayPreferencesPage() {
             setPreferences(preferenceData)
             setEmployees(employeeData)
         } catch (error) {
-            setError(getErrorMessage(error))
+            setError(getApiErrorMessage(error))
         } finally {
             setLoading(false)
         }
@@ -199,7 +160,7 @@ export default function EmployeeDayPreferencesPage() {
 
             await loadData()
         } catch (error) {
-            setError(getErrorMessage(error))
+            setError(getApiErrorMessage(error))
         } finally {
             setSaving(false)
         }
@@ -221,7 +182,7 @@ export default function EmployeeDayPreferencesPage() {
                 'Employee day preference deleted successfully.',
             )
         } catch (error) {
-            setError(getErrorMessage(error))
+            setError(getApiErrorMessage(error))
         } finally {
             setDeletingId(null)
         }

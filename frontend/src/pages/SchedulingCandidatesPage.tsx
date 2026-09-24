@@ -3,15 +3,7 @@ import { getShifts } from '../services/shiftService'
 import { getSchedulingCandidates } from '../services/schedulingCandidateService'
 import type { Shift } from '../types/shift'
 import type { SchedulingCandidate } from '../types/schedulingCandidate'
-
-const getErrorMessage = (error: any): string => {
-    return (
-        error?.response?.data?.message ||
-        error?.response?.data?.title ||
-        error?.response?.data?.errors?.[0] ||
-        'An unexpected error occurred.'
-    )
-}
+import { getApiErrorMessage } from '../services/apiError'
 
 const getScoreLabel = (score: number): string => {
     if (score >= 80) return 'Excellent'
@@ -44,7 +36,7 @@ function SchedulingCandidatesPage() {
                 const data = await getShifts()
                 setShifts(data)
             } catch (err) {
-                setError(getErrorMessage(err))
+                setError(getApiErrorMessage(err))
             } finally {
                 setLoadingShifts(false)
             }
@@ -73,7 +65,7 @@ function SchedulingCandidatesPage() {
                 }.`,
             )
         } catch (err) {
-            setError(getErrorMessage(err))
+            setError(getApiErrorMessage(err))
         } finally {
             setLoadingCandidates(false)
         }

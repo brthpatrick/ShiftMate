@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { AxiosError } from 'axios'
 import {
     createAvailability,
     deleteAvailability,
@@ -8,6 +7,8 @@ import {
 import { getEmployees } from '../services/employeeService'
 import type { Availability } from '../types/availability'
 import type { Employee } from '../types/employee'
+import { getApiErrorMessage } from '../services/apiError'
+
 
 const daysOfWeek = [
     { value: 0, label: 'Sunday' },
@@ -23,15 +24,6 @@ function getDayName(dayOfWeek: number): string {
     return (
         daysOfWeek.find((day) => day.value === dayOfWeek)?.label ??
         'Unknown'
-    )
-}
-
-function getErrorMessage(error: unknown): string {
-    const axiosError = error as AxiosError<{ message?: string }>
-
-    return (
-        axiosError.response?.data?.message ??
-        'An unexpected error occurred.'
     )
 }
 
@@ -67,7 +59,7 @@ export default function AvailabilityPage() {
             setAvailabilities(availabilityData)
             setEmployees(employeeData)
         } catch (error) {
-            setError(getErrorMessage(error))
+            setError(getApiErrorMessage(error))
         } finally {
             setLoading(false)
         }
@@ -132,7 +124,7 @@ export default function AvailabilityPage() {
 
             await loadData()
         } catch (error) {
-            setError(getErrorMessage(error))
+            setError(getApiErrorMessage(error))
         } finally {
             setSaving(false)
         }
@@ -152,7 +144,7 @@ export default function AvailabilityPage() {
 
             setSuccess('Availability deleted successfully.')
         } catch (error) {
-            setError(getErrorMessage(error))
+            setError(getApiErrorMessage(error))
         } finally {
             setDeletingId(null)
         }
