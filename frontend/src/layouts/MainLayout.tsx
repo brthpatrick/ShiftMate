@@ -21,6 +21,7 @@ function MainLayout() {
         { label: 'Employee Day Preferences', path: '/employee-day-preferences' },
         { label: 'Roles', path: '/roles' },
         { label: 'Employee Roles', path: '/employee-roles' },
+        { label: 'Shift Role Requirements', path: '/shift-role-requirements' },
         { label: 'Departments', path: '/departments' },
         { label: 'Locations', path: '/locations' },
         { label: 'Scheduling Candidates', path: '/scheduling-candidates' },
