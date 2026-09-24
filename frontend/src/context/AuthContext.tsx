@@ -1,10 +1,19 @@
-import { createContext, useContext, useMemo, useState } from 'react'
+import {
+  createContext,
+  useContext,
+  useMemo,
+  useState,
+} from 'react'
+
 import type { ReactNode } from 'react'
+
 import { login as loginRequest } from '../services/authService'
+
 import {
   getToken,
-  removeToken,
+  clearAuthStorage,
 } from '../services/authStorage'
+
 import type { LoginRequest } from '../types/auth'
 
 interface AuthContextValue {
@@ -13,24 +22,30 @@ interface AuthContextValue {
   logout: () => void
 }
 
-const AuthContext = createContext<AuthContextValue | undefined>(undefined)
+const AuthContext = createContext<
+  AuthContextValue | undefined
+>(undefined)
 
 interface AuthProviderProps {
   children: ReactNode
 }
 
-export function AuthProvider({ children }: AuthProviderProps) {
+export function AuthProvider({
+  children,
+}: AuthProviderProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(
     () => getToken() !== null,
   )
 
-  const login = async (credentials: LoginRequest) => {
+  const login = async (
+    credentials: LoginRequest,
+  ) => {
     await loginRequest(credentials)
     setIsAuthenticated(true)
   }
 
   const logout = () => {
-    removeToken()
+    clearAuthStorage()
     setIsAuthenticated(false)
   }
 
@@ -54,7 +69,9 @@ export function useAuth() {
   const context = useContext(AuthContext)
 
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
+    throw new Error(
+      'useAuth must be used within an AuthProvider',
+    )
   }
 
   return context

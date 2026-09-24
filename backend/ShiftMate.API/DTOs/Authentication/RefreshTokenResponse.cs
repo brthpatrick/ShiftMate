@@ -1,6 +1,6 @@
 namespace ShiftMate.API.DTOs.Authentication;
 
-public class LoginResponse
+public class RefreshTokenResponse
 {
     public string Token { get; set; } = string.Empty;
 
@@ -9,14 +9,4 @@ public class LoginResponse
     public string RefreshToken { get; set; } = string.Empty;
 
     public DateTime RefreshTokenExpiresAt { get; set; }
-
-    public int UserId { get; set; }
-
-    public int CompanyId { get; set; }
-
-    public int? EmployeeId { get; set; }
-
-    public string Email { get; set; } = string.Empty;
-
-    public string Role { get; set; } = string.Empty;
 }

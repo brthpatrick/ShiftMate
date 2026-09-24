@@ -16,17 +16,21 @@ public class AuthenticationController : ControllerBase
     private readonly IPasswordService _passwordService;
     private readonly IJwtService _jwtService;
     private readonly ICurrentUserService _currentUserService;
+    private readonly IRefreshTokenService _refreshTokenService;
+
 
     public AuthenticationController(
         ShiftMateDbContext context,
         IPasswordService passwordService,
         IJwtService jwtService,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        IRefreshTokenService refreshTokenService)
     {
         _context = context;
         _passwordService = passwordService;
         _jwtService = jwtService;
         _currentUserService = currentUserService;
+        _refreshTokenService = refreshTokenService;
     }
 
     [HttpPost("register-company")]
@@ -323,10 +327,30 @@ public class AuthenticationController : ControllerBase
 
         var (token, expiresAt) = _jwtService.GenerateToken(user);
 
+        var (
+            refreshToken,
+            refreshTokenHash,
+            refreshTokenExpiresAt
+        ) = _refreshTokenService.GenerateToken();
+
+        var refreshTokenEntity = new RefreshToken
+        {
+            UserId = user.Id,
+            TokenHash = refreshTokenHash,
+            CreatedAt = DateTime.UtcNow,
+            ExpiresAt = refreshTokenExpiresAt
+        };
+
+        _context.RefreshTokens.Add(refreshTokenEntity);
+
+        await _context.SaveChangesAsync();
+
         var response = new LoginResponse
         {
             Token = token,
             ExpiresAt = expiresAt,
+            RefreshToken = refreshToken,
+            RefreshTokenExpiresAt = refreshTokenExpiresAt,
             UserId = user.Id,
             CompanyId = user.CompanyId,
             EmployeeId = user.EmployeeId,
@@ -369,6 +393,102 @@ public class AuthenticationController : ControllerBase
             employeeId = _currentUserService.EmployeeId,
             email = _currentUserService.Email,
             role = _currentUserService.Role?.ToString()
+        });
+    }
+
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh(
+    RefreshTokenRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.RefreshToken))
+        {
+            return Unauthorized(new
+            {
+                message = "Refresh token is required."
+            });
+        }
+
+        var existingToken =
+            await _refreshTokenService.GetValidTokenAsync(
+                request.RefreshToken);
+
+        if (existingToken is null)
+        {
+            return Unauthorized(new
+            {
+                message = "Invalid or expired refresh token."
+            });
+        }
+
+        var user = existingToken.User;
+
+        if (!user.IsActive)
+        {
+            return Unauthorized(new
+            {
+                message = "The user account is inactive."
+            });
+        }
+
+        var (newAccessToken, newAccessTokenExpiresAt) =
+            _jwtService.GenerateToken(user);
+
+        var (
+            newRefreshToken,
+            newRefreshTokenHash,
+            newRefreshTokenExpiresAt
+        ) = _refreshTokenService.GenerateToken();
+
+        await _refreshTokenService.RevokeTokenAsync(
+            existingToken,
+            newRefreshTokenHash);
+
+        var newRefreshTokenEntity = new RefreshToken
+        {
+            UserId = user.Id,
+            TokenHash = newRefreshTokenHash,
+            CreatedAt = DateTime.UtcNow,
+            ExpiresAt = newRefreshTokenExpiresAt
+        };
+
+        _context.RefreshTokens.Add(newRefreshTokenEntity);
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new RefreshTokenResponse
+        {
+            Token = newAccessToken,
+            ExpiresAt = newAccessTokenExpiresAt,
+            RefreshToken = newRefreshToken,
+            RefreshTokenExpiresAt = newRefreshTokenExpiresAt
+        });
+    }
+
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout(
+    RefreshTokenRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.RefreshToken))
+        {
+            return Ok(new
+            {
+                message = "Logged out successfully."
+            });
+        }
+
+        var refreshToken =
+            await _refreshTokenService.GetValidTokenAsync(
+                request.RefreshToken);
+
+        if (refreshToken is not null)
+        {
+            await _refreshTokenService.RevokeTokenAsync(
+                refreshToken);
+        }
+
+        return Ok(new
+        {
+            message = "Logged out successfully."
         });
     }
 }

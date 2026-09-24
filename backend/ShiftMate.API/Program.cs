@@ -40,6 +40,8 @@ builder.Services.AddScoped<IJwtService, JwtService>();
 
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
+builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddScoped<IAccessControlService, AccessControlService>();

@@ -36,6 +36,8 @@ public class ShiftMateDbContext : DbContext
 
     public DbSet<EmployeeDayPreference> EmployeeDayPreferences { get; set; }
 
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+
     public DbSet<User> Users { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -44,7 +46,7 @@ public class ShiftMateDbContext : DbContext
 
         modelBuilder.Entity<EmployeeRole>()
             .HasKey(er => new { er.EmployeeId, er.RoleId });
-    
+
         modelBuilder.Entity<Employee>()
             .HasOne(e => e.Department)
             .WithMany(d => d.Employees)
@@ -58,7 +60,7 @@ public class ShiftMateDbContext : DbContext
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<ShiftAssignment>()
-            .HasIndex(sa => new {sa.EmployeeId, sa.ShiftId })
+            .HasIndex(sa => new { sa.EmployeeId, sa.ShiftId })
             .IsUnique();
 
         modelBuilder.Entity<Company>(entity =>
@@ -192,10 +194,10 @@ public class ShiftMateDbContext : DbContext
                 .HasForeignKey(edp => edp.EmployeeId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasIndex(edp => new 
-            { 
-                edp.EmployeeId, 
-                edp.DayOfWeek 
+            entity.HasIndex(edp => new
+            {
+                edp.EmployeeId,
+                edp.DayOfWeek
             })
             .IsUnique();
         });
@@ -221,6 +223,28 @@ public class ShiftMateDbContext : DbContext
                 .WithOne(e => e.User)
                 .HasForeignKey<User>(u => u.EmployeeId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<RefreshToken>(entity =>
+        {
+            entity.HasKey(rt => rt.Id);
+
+            entity.Property(rt => rt.TokenHash)
+                .IsRequired()
+                .HasMaxLength(128);
+
+            entity.Property(rt => rt.ReplacedByTokenHash)
+                .HasMaxLength(128);
+
+            entity.HasIndex(rt => rt.TokenHash)
+                .IsUnique();
+
+            entity.HasIndex(rt => rt.UserId);
+
+            entity.HasOne(rt => rt.User)
+                .WithMany(u => u.RefreshTokens)
+                .HasForeignKey(rt => rt.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

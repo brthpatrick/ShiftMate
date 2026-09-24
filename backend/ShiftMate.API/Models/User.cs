@@ -21,4 +21,6 @@ public class User
     public Company Company { get; set; } = null!;
 
     public Employee? Employee { get; set; }
+
+    public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 }

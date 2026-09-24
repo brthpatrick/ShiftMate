@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ShiftMate.API.Data;
 
@@ -11,9 +12,11 @@ using ShiftMate.API.Data;
 namespace ShiftMate.API.Migrations
 {
     [DbContext(typeof(ShiftMateDbContext))]
-    partial class ShiftMateDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260924092103_AddRefreshTokens")]
+    partial class AddRefreshTokens
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

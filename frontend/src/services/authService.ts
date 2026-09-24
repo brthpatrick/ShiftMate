@@ -1,6 +1,14 @@
 import api from './api'
-import { setToken } from './authStorage'
-import type { LoginRequest, LoginResponse } from '../types/auth'
+
+import {
+  setToken,
+  setRefreshToken,
+} from './authStorage'
+
+import type {
+  LoginRequest,
+  LoginResponse,
+} from '../types/auth'
 
 export const login = async (
   credentials: LoginRequest,
@@ -11,6 +19,7 @@ export const login = async (
   )
 
   setToken(response.data.token)
+  setRefreshToken(response.data.refreshToken)
 
   return response.data
 }
