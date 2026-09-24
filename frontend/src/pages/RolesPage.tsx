@@ -57,6 +57,9 @@ export default function RolesPage() {
     ) => {
         event.preventDefault()
 
+        setError('')
+        setSuccess('')
+
         const trimmedName = roleName.trim()
 
         if (!trimmedName) {
@@ -66,8 +69,6 @@ export default function RolesPage() {
 
         try {
             setSaving(true)
-            setError('')
-            setSuccess('')
 
             const request: CreateRoleRequest = {
                 name: trimmedName,

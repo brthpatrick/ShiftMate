@@ -108,6 +108,9 @@ export default function EmployeePreferencesPage() {
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault()
 
+        setError('')
+        setSuccess('')
+
         if (!selectedEmployeeId) {
             setError('Please select an employee.')
             return
@@ -122,8 +125,6 @@ export default function EmployeePreferencesPage() {
 
         try {
             setSaving(true)
-            setError('')
-            setSuccess('')
 
             const request: CreateEmployeePreferenceRequest = {
                 employeeId: Number(selectedEmployeeId),

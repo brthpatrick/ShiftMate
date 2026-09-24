@@ -78,6 +78,10 @@ function ShiftRoleRequirementsPage() {
     ) => {
         event.preventDefault()
 
+        setFormError('')
+        setError('')
+        setSuccess('')
+
         if (shiftId === '') {
             setFormError('Please select a shift.')
             return
@@ -97,9 +101,6 @@ function ShiftRoleRequirementsPage() {
 
         try {
             setIsSubmitting(true)
-            setFormError('')
-            setError('')
-            setSuccess('')
 
             const created =
                 await createShiftRoleRequirement({

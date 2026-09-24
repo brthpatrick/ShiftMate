@@ -45,6 +45,7 @@ export default function LeaveRequestsPage() {
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [processingId, setProcessingId] = useState<number | null>(null)
+    const [processingAction, setProcessingAction] = useState<'approve' | 'reject' | null>(null)
 
     const [error, setError] = useState('')
     const [success, setSuccess] = useState('')
@@ -86,6 +87,9 @@ export default function LeaveRequestsPage() {
 
     const handleCreate = async (event: React.FormEvent) => {
         event.preventDefault()
+
+        setError('')
+        setSuccess('')
 
         if (!selectedEmployeeId) {
             setError('Please select an employee.')
@@ -134,6 +138,7 @@ export default function LeaveRequestsPage() {
     const handleApprove = async (id: number) => {
         try {
             setProcessingId(id)
+            setProcessingAction('approve')
             setError('')
             setSuccess('')
 
@@ -146,12 +151,14 @@ export default function LeaveRequestsPage() {
             setError(getApiErrorMessage(error))
         } finally {
             setProcessingId(null)
+            setProcessingAction(null)
         }
     }
 
     const handleReject = async (id: number) => {
         try {
             setProcessingId(id)
+            setProcessingAction('reject')
             setError('')
             setSuccess('')
 
@@ -164,6 +171,7 @@ export default function LeaveRequestsPage() {
             setError(getApiErrorMessage(error))
         } finally {
             setProcessingId(null)
+            setProcessingAction(null)
         }
     }
 
@@ -387,33 +395,29 @@ export default function LeaveRequestsPage() {
                                                     <button
                                                         type="button"
                                                         onClick={() =>
-                                                            handleApprove(
-                                                                request.id,
-                                                            )
+                                                            handleApprove(request.id)
                                                         }
-                                                        disabled={
-                                                            processingId ===
-                                                            request.id
-                                                        }
+                                                        disabled={processingId === request.id}
                                                         className="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
                                                     >
-                                                        Approve
+                                                        {processingId === request.id &&
+                                                            processingAction === 'approve'
+                                                            ? 'Approving...'
+                                                            : 'Approve'}
                                                     </button>
 
                                                     <button
                                                         type="button"
                                                         onClick={() =>
-                                                            handleReject(
-                                                                request.id,
-                                                            )
+                                                            handleReject(request.id)
                                                         }
-                                                        disabled={
-                                                            processingId ===
-                                                            request.id
-                                                        }
+                                                        disabled={processingId === request.id}
                                                         className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                                                     >
-                                                        Reject
+                                                        {processingId === request.id &&
+                                                            processingAction === 'reject'
+                                                            ? 'Rejecting...'
+                                                            : 'Reject'}
                                                     </button>
                                                 </div>
                                             ) : (

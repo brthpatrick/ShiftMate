@@ -109,19 +109,20 @@ function AssignmentsPage() {
     ) => {
         event.preventDefault()
 
+        setFormError('')
+
+        if (formData.shiftId === 0) {
+            setFormError('Please select a shift.')
+            return
+        }
+
+        if (formData.employeeId === 0) {
+            setFormError('Please select an employee.')
+            return
+        }
+
         try {
             setIsSubmitting(true)
-            setFormError('')
-
-            if (formData.shiftId === 0) {
-                setFormError('Please select a shift.')
-                return
-            }
-
-            if (formData.employeeId === 0) {
-                setFormError('Please select an employee.')
-                return
-            }
 
             const request: AssignEmployeeToShiftRequest = {
                 shiftId: formData.shiftId,

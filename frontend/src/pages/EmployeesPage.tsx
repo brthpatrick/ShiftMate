@@ -69,7 +69,7 @@ function EmployeesPage() {
 
                 setEmployees(employeesData)
                 setDepartments(departmentsData)
-            } catch (error){
+            } catch (error) {
                 setError(getApiErrorMessage(error))
             } finally {
                 setIsLoading(false)

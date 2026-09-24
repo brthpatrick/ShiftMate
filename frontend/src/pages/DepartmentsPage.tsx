@@ -59,6 +59,9 @@ export default function DepartmentsPage() {
     ) => {
         event.preventDefault()
 
+        setError('')
+        setSuccess('')
+
         const trimmedName = departmentName.trim()
 
         if (!trimmedName) {
@@ -68,8 +71,6 @@ export default function DepartmentsPage() {
 
         try {
             setSaving(true)
-            setError('')
-            setSuccess('')
 
             const request: CreateDepartmentRequest = {
                 name: trimmedName,

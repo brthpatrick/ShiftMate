@@ -160,38 +160,39 @@ function ShiftsPage() {
     ) => {
         event.preventDefault()
 
+        setFormError('')
+
+        if (formData.locationId === 0) {
+            setFormError('Please select a location.')
+            return
+        }
+
+        if (formData.requiredEmployees < 1) {
+            setFormError(
+                'Required employees must be at least 1.',
+            )
+            return
+        }
+
+        if (!formData.startTime || !formData.endTime) {
+            setFormError(
+                'Start time and end time are required.',
+            )
+            return
+        }
+
+        if (
+            new Date(formData.endTime) <=
+            new Date(formData.startTime)
+        ) {
+            setFormError(
+                'End time must be after start time.',
+            )
+            return
+        }
+
         try {
             setIsSubmitting(true)
-            setFormError('')
-
-            if (formData.locationId === 0) {
-                setFormError('Please select a location.')
-                return
-            }
-
-            if (formData.requiredEmployees < 1) {
-                setFormError(
-                    'Required employees must be at least 1.',
-                )
-                return
-            }
-
-            if (!formData.startTime || !formData.endTime) {
-                setFormError(
-                    'Start time and end time are required.',
-                )
-                return
-            }
-
-            if (
-                new Date(formData.endTime) <=
-                new Date(formData.startTime)
-            ) {
-                setFormError(
-                    'End time must be after start time.',
-                )
-                return
-            }
 
             const request: CreateShiftRequest = {
                 locationId: formData.locationId,

@@ -84,6 +84,9 @@ export default function EmployeeRolesPage() {
     ) => {
         event.preventDefault()
 
+        setError('')
+        setSuccess('')
+
         if (!selectedEmployeeId) {
             setError('Please select an employee.')
             return
@@ -96,8 +99,6 @@ export default function EmployeeRolesPage() {
 
         try {
             setSaving(true)
-            setError('')
-            setSuccess('')
 
             const request: CreateEmployeeRoleRequest = {
                 employeeId: Number(selectedEmployeeId),

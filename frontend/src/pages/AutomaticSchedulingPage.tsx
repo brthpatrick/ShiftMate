@@ -64,6 +64,9 @@ function AutomaticSchedulingPage() {
     )
 
     const handleRunScheduling = async () => {
+        setError('')
+        setSuccess('')
+
         if (selectedShiftId === '') {
             setError('Please select a shift.')
             return
@@ -71,8 +74,6 @@ function AutomaticSchedulingPage() {
 
         try {
             setIsRunning(true)
-            setError('')
-            setSuccess('')
             setResult(null)
 
             const data = await runAutomaticScheduling(

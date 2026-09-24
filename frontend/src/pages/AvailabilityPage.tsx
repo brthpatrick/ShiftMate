@@ -86,6 +86,9 @@ export default function AvailabilityPage() {
     const handleCreate = async (event: React.FormEvent) => {
         event.preventDefault()
 
+        setError('')
+        setSuccess('')
+
         if (!selectedEmployeeId) {
             setError('Please select an employee.')
             return
@@ -103,8 +106,6 @@ export default function AvailabilityPage() {
 
         try {
             setSaving(true)
-            setError('')
-            setSuccess('')
 
             await createAvailability({
                 employeeId: Number(selectedEmployeeId),
@@ -379,8 +380,8 @@ export default function AvailabilityPage() {
                                             <td className="whitespace-nowrap px-6 py-4 text-sm">
                                                 <span
                                                     className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${availability.isAvailable
-                                                            ? 'bg-green-100 text-green-700'
-                                                            : 'bg-gray-100 text-gray-700'
+                                                        ? 'bg-green-100 text-green-700'
+                                                        : 'bg-gray-100 text-gray-700'
                                                         }`}
                                                 >
                                                     {availability.isAvailable

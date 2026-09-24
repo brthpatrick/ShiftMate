@@ -46,6 +46,9 @@ function SchedulingCandidatesPage() {
     }, [])
 
     const handleFindCandidates = async () => {
+        setError('')
+        setSuccess('')
+
         if (selectedShiftId === '') {
             setError('Please select a shift.')
             return
@@ -53,8 +56,6 @@ function SchedulingCandidatesPage() {
 
         try {
             setLoadingCandidates(true)
-            setError('')
-            setSuccess('')
             setCandidates([])
 
             const data = await getSchedulingCandidates(selectedShiftId)

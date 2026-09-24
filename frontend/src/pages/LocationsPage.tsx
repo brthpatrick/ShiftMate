@@ -68,6 +68,9 @@ export default function LocationsPage() {
     ) => {
         event.preventDefault()
 
+        setError('')
+        setSuccess('')
+
         const trimmedName = name.trim()
         const trimmedAddress = address.trim()
         const trimmedCity = city.trim()
@@ -89,8 +92,6 @@ export default function LocationsPage() {
 
         try {
             setSaving(true)
-            setError('')
-            setSuccess('')
 
             const request: CreateLocationRequest = {
                 name: trimmedName,
